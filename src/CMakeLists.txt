@@ -1,0 +1,50 @@
+# Copyright 2022 PingCAP, Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+add_subdirectory (./V3/CheckpointFile/Proto)
+
+add_headers_and_sources(page .)
+add_headers_and_sources(page ./Core)
+add_headers_and_sources(page ./V1)
+add_headers_and_sources(page ./V1/mvcc)
+add_headers_and_sources(page ./V1/VersionSet)
+add_headers_and_sources(page ./V2)
+add_headers_and_sources(page ./V2/mvcc)
+add_headers_and_sources(page ./V2/VersionSet)
+add_headers_and_sources(page ./V2/gc)
+add_headers_and_sources(page ./V3)
+add_headers_and_sources(page ./V3/Blob)
+add_headers_and_sources(page ./V3/LogFile)
+add_headers_and_sources(page ./V3/PageDirectory)
+add_headers_and_sources(page ./V3/spacemap)
+add_headers_and_sources(page ./V3/Universal)
+add_headers_and_sources(page ./V3/CheckpointFile)
+add_headers_and_sources(page ./V3/WAL)
+
+add_library(page_house ${page_headers} ${page_sources})
+target_link_libraries (page_house
+    PUBLIC
+    ${LZ4_LIBRARY}
+    ${Poco_Data_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY}
+)
+
+add_subdirectory(workload)
+add_subdirectory(tools)
+
+if (ENABLE_TESTS)
+    add_subdirectory (V2/tests EXCLUDE_FROM_ALL)
+    add_subdirectory (V3/tests EXCLUDE_FROM_ALL)
+endif ()
