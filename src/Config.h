@@ -15,7 +15,6 @@
 #pragma once
 
 #include <Core/Types.h>
-#include <Interpreters/SettingsCommon.h>
 #include <PageDefinesBase.h>
 
 namespace DB
@@ -50,38 +49,38 @@ struct PageStorageConfig
     //==========================================================================================
     // V2 config
     //==========================================================================================
-    SettingBool sync_on_write = true;
+    bool sync_on_write = true;
 
-    SettingUInt64 file_roll_size = PAGE_FILE_ROLL_SIZE;
-    SettingUInt64 file_max_size = PAGE_FILE_MAX_SIZE;
-    SettingUInt64 file_small_size = PAGE_FILE_SMALL_SIZE;
+    UInt64 file_roll_size = PAGE_FILE_ROLL_SIZE;
+    UInt64 file_max_size = PAGE_FILE_MAX_SIZE;
+    UInt64 file_small_size = PAGE_FILE_SMALL_SIZE;
 
-    SettingUInt64 file_meta_roll_size = PAGE_META_ROLL_SIZE;
+    UInt64 file_meta_roll_size = PAGE_META_ROLL_SIZE;
 
     // When the value of gc_force_hardlink_rate is less than or equal to 1,
     // It means that candidates whose valid rate is greater than this value will be forced to hardlink(This will reduce the gc duration).
     // Otherwise, if gc_force_hardlink_rate is greater than 1, hardlink won't happen
-    SettingDouble gc_force_hardlink_rate = 2;
+    Float64 gc_force_hardlink_rate = 2;
 
-    SettingDouble gc_max_valid_rate = 0.35;
-    SettingUInt64 gc_min_bytes = PAGE_FILE_ROLL_SIZE;
-    SettingUInt64 gc_min_files = 10;
+    Float64 gc_max_valid_rate = 0.35;
+    UInt64 gc_min_bytes = PAGE_FILE_ROLL_SIZE;
+    UInt64 gc_min_files = 10;
     // Minimum number of legacy files to be selected for compaction
-    SettingUInt64 gc_min_legacy_num = 3;
+    UInt64 gc_min_legacy_num = 3;
 
-    SettingUInt64 gc_max_expect_legacy_files = 100;
-    SettingDouble gc_max_valid_rate_bound = 1.0;
+    UInt64 gc_max_expect_legacy_files = 100;
+    Float64 gc_max_valid_rate_bound = 1.0;
 
     // Maximum write concurrency. Must not be changed once the PageStorage object is created.
-    SettingUInt64 num_write_slots = 1;
+    UInt64 num_write_slots = 1;
 
     // Maximum seconds of reader / writer idle time.
     // 0 for never reclaim idle file descriptor.
-    SettingUInt64 open_file_max_idle_time = 15;
+    UInt64 open_file_max_idle_time = 15;
 
     // Probability to do gc when write is low.
     // The probability is `prob_do_gc_when_write_is_low` out of 1000.
-    SettingUInt64 prob_do_gc_when_write_is_low = 10;
+    UInt64 prob_do_gc_when_write_is_low = 10;
 
     MVCC::VersionSetConfig version_set_config;
 
@@ -96,13 +95,13 @@ struct PageStorageConfig
     //==========================================================================================
     // V3 config
     //==========================================================================================
-    SettingUInt64 blob_file_limit_size = BLOBFILE_LIMIT_SIZE;
-    SettingUInt64 blob_spacemap_type = 2;
-    SettingDouble blob_heavy_gc_valid_rate = 0.5;
-    SettingUInt64 blob_block_alignment_bytes = 0;
+    UInt64 blob_file_limit_size = BLOBFILE_LIMIT_SIZE;
+    UInt64 blob_spacemap_type = 2;
+    Float64 blob_heavy_gc_valid_rate = 0.5;
+    UInt64 blob_block_alignment_bytes = 0;
 
-    SettingUInt64 wal_roll_size = PAGE_META_ROLL_SIZE;
-    SettingUInt64 wal_max_persisted_log_files = MAX_PERSISTED_LOG_FILES;
+    UInt64 wal_roll_size = PAGE_META_ROLL_SIZE;
+    UInt64 wal_max_persisted_log_files = MAX_PERSISTED_LOG_FILES;
 
     void reload(const PageStorageConfig & rhs)
     {
@@ -136,11 +135,11 @@ struct PageStorageConfig
             "open_file_max_idle_time: {}}}",
             gc_min_files,
             gc_min_bytes,
-            gc_force_hardlink_rate.get(),
-            gc_max_valid_rate.get(),
+            gc_force_hardlink_rate,
+            gc_max_valid_rate,
             gc_min_legacy_num,
-            gc_max_expect_legacy_files.get(),
-            gc_max_valid_rate_bound.get(),
+            gc_max_expect_legacy_files,
+            gc_max_valid_rate_bound,
             prob_do_gc_when_write_is_low,
             open_file_max_idle_time);
     }
@@ -152,12 +151,12 @@ struct PageStorageConfig
             "blob_file_limit_size: {}, blob_spacemap_type: {}, "
             "blob_heavy_gc_valid_rate: {:.3f}, blob_block_alignment_bytes: {}, "
             "wal_roll_size: {}, wal_max_persisted_log_files: {}}}",
-            blob_file_limit_size.get(),
-            blob_spacemap_type.get(),
-            blob_heavy_gc_valid_rate.get(),
-            blob_block_alignment_bytes.get(),
-            wal_roll_size.get(),
-            wal_max_persisted_log_files.get());
+            blob_file_limit_size,
+            blob_spacemap_type,
+            blob_heavy_gc_valid_rate,
+            blob_block_alignment_bytes,
+            wal_roll_size,
+            wal_max_persisted_log_files);
     }
 };
 } // namespace DB

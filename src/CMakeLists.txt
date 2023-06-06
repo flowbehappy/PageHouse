@@ -16,14 +16,11 @@
 add_subdirectory (./V3/CheckpointFile/Proto)
 
 add_headers_and_sources(page .)
+add_headers_and_sources(page ./Common)
+add_headers_and_sources(page ./Common/StringUtils)
 add_headers_and_sources(page ./Core)
-add_headers_and_sources(page ./V1)
-add_headers_and_sources(page ./V1/mvcc)
-add_headers_and_sources(page ./V1/VersionSet)
-add_headers_and_sources(page ./V2)
-add_headers_and_sources(page ./V2/mvcc)
-add_headers_and_sources(page ./V2/VersionSet)
-add_headers_and_sources(page ./V2/gc)
+add_headers_and_sources(page ./Encryption)
+add_headers_and_sources(page ./IO)
 add_headers_and_sources(page ./V3)
 add_headers_and_sources(page ./V3/Blob)
 add_headers_and_sources(page ./V3/LogFile)
@@ -31,11 +28,15 @@ add_headers_and_sources(page ./V3/PageDirectory)
 add_headers_and_sources(page ./V3/spacemap)
 add_headers_and_sources(page ./V3/Universal)
 add_headers_and_sources(page ./V3/CheckpointFile)
+add_headers_and_sources(page ./V3/CheckpointFile/Proto)
 add_headers_and_sources(page ./V3/WAL)
 
 add_library(page_house ${page_headers} ${page_sources})
 target_link_libraries (page_house
     PUBLIC
+    libsymbolization
+    cityhash
+    magic_enum
     ${LZ4_LIBRARY}
     ${Poco_Data_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}

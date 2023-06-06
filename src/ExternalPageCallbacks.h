@@ -16,6 +16,7 @@
 
 #include <PageDefinesBase.h>
 
+#include <set>
 #include <vector>
 
 namespace DB

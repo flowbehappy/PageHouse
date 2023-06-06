@@ -14,7 +14,6 @@
 
 #include <Common/Exception.h>
 #include <Common/TiFlashMetrics.h>
-#include <Storages/DeltaMerge/Remote/DataStore/DataStore.h>
 #include <V3/CheckpointFile/CPDataFileStat.h>
 #include <fmt/chrono.h>
 
@@ -116,6 +115,7 @@ struct RemoteFilesInfo
     Stats summary_stats;
 };
 
+#ifdef N
 std::unordered_set<String> getRemoteFileIdsNeedCompact(
     PS::V3::CPDataFilesStatCache::CacheMap & stats, // will be updated
     const DM::Remote::RemoteGCThreshold & gc_threshold,
@@ -181,6 +181,8 @@ std::unordered_set<String> getRemoteFileIdsNeedCompact(
         gc_threshold);
     return compact_files;
 }
+
+#endif
 
 } // namespace DB::PS::V3
 

@@ -13,6 +13,8 @@
 # limitations under the License.
 
 file(GLOB PROTO_FILES CONFIGURE_DEPENDS *.proto)
+
+message (STATUS "Generating page protobuf files")
 protobuf_generate_cpp(PROTO_SRCS PB_HEADERS ${PROTO_FILES})
 
 add_library(PSCheckpointProto

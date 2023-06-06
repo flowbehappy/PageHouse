@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <Interpreters/Settings.h>
+#include <Common/Settings.h>
 #include <ConfigSettings.h>
 
 namespace DB
