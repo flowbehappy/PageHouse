@@ -11,6 +11,19 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PageHouse_SOURCE_DIR}/cmake/Modules/")
 
+option (UNBUNDLED "Try find all libraries in system (if fail - use bundled from contrib/)" OFF)
+if (UNBUNDLED)
+    set(NOT_UNBUNDLED 0)
+else ()
+    set(NOT_UNBUNDLED 1)
+endif ()
+# Using system libs can cause lot of warnings in includes.
+if (UNBUNDLED OR NOT (OS_LINUX OR OS_DARWIN) OR ARCH_32)
+    option (NO_WERROR "Disable -Werror compiler option" ON)
+endif ()
+
+message(STATUS "UNBUNDLED=${UNBUNDLED}, NOT_UNBUNDLED=${NOT_UNBUNDLED}")
+
 include (cmake/add_warning.cmake)
 include (cmake/sources.cmake)
 include (cmake/find_jemalloc.cmake)

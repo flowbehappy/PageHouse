@@ -26,5 +26,6 @@ add_library(page_storage_v3 EXCLUDE_FROM_ALL
     ${page_storage_v3_headers} ${page_storage_v3_sources}
     ${io_base_headers} ${io_base_sources}
 )
+
 target_include_directories(page_storage_v3 PUBLIC ${PageHouse_SOURCE_DIR}/contrib/tiflash-proxy/raftstore-proxy/ffi/src)
-target_link_libraries(page_storage_v3 tiflash_common_io cpptoml kv_client tipb) 
+target_link_libraries(page_storage_v3 PSCheckpointProto)

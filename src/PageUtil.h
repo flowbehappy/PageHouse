@@ -20,11 +20,11 @@
 #include <Common/ProfileEvents.h>
 #include <Common/StringUtils/StringUtils.h>
 #include <Common/TiFlashException.h>
+#include <Common/logger_useful.h>
+#include <Common/string_split.h>
 #include <Encryption/FileProvider.h>
 #include <IO/WriteHelpers.h>
 #include <Page.h>
-#include <boost_wrapper/string_split.h>
-#include <Common/logger_useful.h>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <random>
@@ -32,14 +32,13 @@
 #ifndef __APPLE__
 #include <fcntl.h>
 #endif
+#include <Common/scope_guard.h>
 #include <Encryption/RandomAccessFile.h>
 #include <Encryption/RateLimiter.h>
 #include <Encryption/WritableFile.h>
 #include <Encryption/WriteReadableFile.h>
 #include <IO/WriteBufferFromFile.h>
 #include <Poco/File.h>
-
-#include <ext/scope_guard.h>
 
 
 namespace ProfileEvents

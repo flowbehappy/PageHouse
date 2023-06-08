@@ -18,7 +18,7 @@
 #include <Common/TiFlashException.h>
 #include <Encryption/KeyManager.h>
 #include <Poco/Path.h>
-#include <Common/likely.h>
+
 
 namespace DB
 {

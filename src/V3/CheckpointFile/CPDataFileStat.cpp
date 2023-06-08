@@ -115,74 +115,71 @@ struct RemoteFilesInfo
     Stats summary_stats;
 };
 
-#ifdef N
-std::unordered_set<String> getRemoteFileIdsNeedCompact(
-    PS::V3::CPDataFilesStatCache::CacheMap & stats, // will be updated
-    const DM::Remote::RemoteGCThreshold & gc_threshold,
-    const DM::Remote::IDataStorePtr & remote_store,
-    const LoggerPtr & log)
-{
-    {
-        std::unordered_set<String> file_ids;
-        // If the total_size less than 0, it means the size has not been fetch from
-        // the remote store successfully, try to get the actual size from S3
-        for (const auto & [file_id, stat] : stats)
-        {
-            if (stat.total_size < 0)
-                file_ids.insert(file_id);
-        }
-        const auto files_info = remote_store->getDataFilesInfo(file_ids);
-        for (const auto & [file_id, info] : files_info)
-        {
-            // IO error or data file not exist, just skip it
-            if (info.size < 0)
-            {
-                continue;
-            }
-            auto iter = stats.find(file_id);
-            RUNTIME_CHECK_MSG(iter != stats.end(), "file_id={} stats={}", file_id, stats);
-            iter->second.total_size = info.size;
-            iter->second.mtime = info.mtime;
-        }
-    }
-
-    const auto now_timepoint = std::chrono::system_clock::now();
-
-    RemoteFilesInfo remote_infos;
-    for (const auto & [file_id, stat] : stats)
-    {
-        if (stat.total_size <= 0)
-            continue;
-
-        auto age_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(now_timepoint - stat.mtime).count() / 1000.0;
-        double valid_rate = 1.0 * stat.valid_size / stat.total_size;
-        if (static_cast<Int64>(age_seconds) > gc_threshold.min_age_seconds
-            && (valid_rate < gc_threshold.valid_rate || stat.total_size < static_cast<Int64>(gc_threshold.min_file_threshold)))
-        {
-            remote_infos.addToCompact(FileInfo{.file_id = file_id, .age_seconds = age_seconds, .total_size = stat.total_size, .valid_rate = valid_rate});
-        }
-        else
-        {
-            remote_infos.addUnchanged(FileInfo{.file_id = file_id, .age_seconds = age_seconds, .total_size = stat.total_size, .valid_rate = valid_rate});
-        }
-    }
-
-    const auto summary = remote_infos.summary_stats;
-    GET_METRIC(tiflash_storage_remote_stats, type_num_files).Set(summary.num_files);
-    GET_METRIC(tiflash_storage_remote_stats, type_total_size).Set(summary.total_size);
-    GET_METRIC(tiflash_storage_remote_stats, type_valid_size).Set(summary.valid_size);
-
-    auto compact_files = remote_infos.getCompactCandidates();
-    LOG_IMPL(
-        log,
-        (compact_files.empty() ? Poco::Message::PRIO_DEBUG : Poco::Message::PRIO_INFORMATION),
-        "CheckpointData stats {} {}",
-        remote_infos,
-        gc_threshold);
-    return compact_files;
-}
-
-#endif
+//std::unordered_set<String> getRemoteFileIdsNeedCompact(
+//    PS::V3::CPDataFilesStatCache::CacheMap & stats, // will be updated
+//    const DM::Remote::RemoteGCThreshold & gc_threshold,
+//    const DM::Remote::IDataStorePtr & remote_store,
+//    const LoggerPtr & log)
+//{
+//    {
+//        std::unordered_set<String> file_ids;
+//        // If the total_size less than 0, it means the size has not been fetch from
+//        // the remote store successfully, try to get the actual size from S3
+//        for (const auto & [file_id, stat] : stats)
+//        {
+//            if (stat.total_size < 0)
+//                file_ids.insert(file_id);
+//        }
+//        const auto files_info = remote_store->getDataFilesInfo(file_ids);
+//        for (const auto & [file_id, info] : files_info)
+//        {
+//            // IO error or data file not exist, just skip it
+//            if (info.size < 0)
+//            {
+//                continue;
+//            }
+//            auto iter = stats.find(file_id);
+//            RUNTIME_CHECK_MSG(iter != stats.end(), "file_id={} stats={}", file_id, stats);
+//            iter->second.total_size = info.size;
+//            iter->second.mtime = info.mtime;
+//        }
+//    }
+//
+//    const auto now_timepoint = std::chrono::system_clock::now();
+//
+//    RemoteFilesInfo remote_infos;
+//    for (const auto & [file_id, stat] : stats)
+//    {
+//        if (stat.total_size <= 0)
+//            continue;
+//
+//        auto age_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(now_timepoint - stat.mtime).count() / 1000.0;
+//        double valid_rate = 1.0 * stat.valid_size / stat.total_size;
+//        if (static_cast<Int64>(age_seconds) > gc_threshold.min_age_seconds
+//            && (valid_rate < gc_threshold.valid_rate || stat.total_size < static_cast<Int64>(gc_threshold.min_file_threshold)))
+//        {
+//            remote_infos.addToCompact(FileInfo{.file_id = file_id, .age_seconds = age_seconds, .total_size = stat.total_size, .valid_rate = valid_rate});
+//        }
+//        else
+//        {
+//            remote_infos.addUnchanged(FileInfo{.file_id = file_id, .age_seconds = age_seconds, .total_size = stat.total_size, .valid_rate = valid_rate});
+//        }
+//    }
+//
+//    const auto summary = remote_infos.summary_stats;
+//    GET_METRIC(tiflash_storage_remote_stats, type_num_files).Set(summary.num_files);
+//    GET_METRIC(tiflash_storage_remote_stats, type_total_size).Set(summary.total_size);
+//    GET_METRIC(tiflash_storage_remote_stats, type_valid_size).Set(summary.valid_size);
+//
+//    auto compact_files = remote_infos.getCompactCandidates();
+//    LOG_IMPL(
+//        log,
+//        (compact_files.empty() ? Poco::Message::PRIO_DEBUG : Poco::Message::PRIO_INFORMATION),
+//        "CheckpointData stats {} {}",
+//        remote_infos,
+//        gc_threshold);
+//    return compact_files;
+//}
 
 } // namespace DB::PS::V3
 

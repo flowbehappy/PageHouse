@@ -15,9 +15,9 @@
 #pragma once
 
 #include <Common/Logger.h>
+#include <Config.h>
 #include <Core/Types.h>
 #include <Encryption/FileProvider_fwd.h>
-#include <Config.h>
 #include <ExternalPageCallbacks.h>
 #include <FileUsage.h>
 #include <Page.h>
@@ -26,8 +26,8 @@
 #include <PageUtil.h>
 #include <Snapshot.h>
 #include <WALRecoveryMode.h>
-#include <Storages/Transaction/Types.h>
-#include logger_useful.h>
+//#include <Storages/Transaction/Types.h>
+#include <Common/logger_useful.h>
 #include <fmt/format.h>
 
 #include <condition_variable>
@@ -53,6 +53,8 @@ class PSDiskDelegator;
 using PSDiskDelegatorPtr = std::shared_ptr<PSDiskDelegator>;
 class Context;
 class RegionPersister;
+
+using KeyspaceID = UInt32;
 
 namespace ErrorCodes
 {
@@ -85,9 +87,7 @@ public:
         PSDiskDelegatorPtr delegator,
         const PageStorageConfig & config,
         const FileProviderPtr & file_provider,
-        Context & global_ctx,
-        bool use_v3 = false,
-        bool no_more_insert_to_v2 = false);
+        Context & global_ctx);
 
     PageStorage(
         String name,

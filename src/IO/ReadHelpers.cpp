@@ -19,7 +19,7 @@
 #include <IO/Operators.h>
 #include <IO/WriteBufferFromString.h>
 #include <IO/WriteHelpers.h>
-#include <IO/readFloatText.h>
+//#include <IO/readFloatText.h>
 #include <Common/find_symbols.h>
 #include <stdlib.h>
 
@@ -645,79 +645,79 @@ template bool readJSONStringInto<PaddedPODArray<UInt8>, bool>(PaddedPODArray<UIn
 template void readJSONStringInto<NullSink>(NullSink & s, ReadBuffer & buf);
 
 
-void readDateTextFallback(LocalDate & date, ReadBuffer & buf)
-{
-    char chars_year[4];
-    readPODBinary(chars_year, buf);
-    UInt16 year = (chars_year[0] - '0') * 1000 + (chars_year[1] - '0') * 100 + (chars_year[2] - '0') * 10 + (chars_year[3] - '0');
+//void readDateTextFallback(LocalDate & date, ReadBuffer & buf)
+//{
+//    char chars_year[4];
+//    readPODBinary(chars_year, buf);
+//    UInt16 year = (chars_year[0] - '0') * 1000 + (chars_year[1] - '0') * 100 + (chars_year[2] - '0') * 10 + (chars_year[3] - '0');
+//
+//    buf.ignore();
+//
+//    char chars_month[2];
+//    readPODBinary(chars_month, buf);
+//    UInt8 month = chars_month[0] - '0';
+//    if (isNumericASCII(chars_month[1]))
+//    {
+//        month = month * 10 + chars_month[1] - '0';
+//        buf.ignore();
+//    }
+//
+//    char char_day;
+//    readChar(char_day, buf);
+//    UInt8 day = char_day - '0';
+//    if (!buf.eof() && isNumericASCII(*buf.position()))
+//    {
+//        day = day * 10 + *buf.position() - '0';
+//        ++buf.position();
+//    }
+//
+//    date = LocalDate(year, month, day);
+//}
 
-    buf.ignore();
 
-    char chars_month[2];
-    readPODBinary(chars_month, buf);
-    UInt8 month = chars_month[0] - '0';
-    if (isNumericASCII(chars_month[1]))
-    {
-        month = month * 10 + chars_month[1] - '0';
-        buf.ignore();
-    }
-
-    char char_day;
-    readChar(char_day, buf);
-    UInt8 day = char_day - '0';
-    if (!buf.eof() && isNumericASCII(*buf.position()))
-    {
-        day = day * 10 + *buf.position() - '0';
-        ++buf.position();
-    }
-
-    date = LocalDate(year, month, day);
-}
-
-
-void readDateTimeTextFallback(time_t & datetime, ReadBuffer & buf, const DateLUTImpl & date_lut)
-{
-    static constexpr auto DATE_TIME_BROKEN_DOWN_LENGTH = 19;
-    static constexpr auto UNIX_TIMESTAMP_MAX_LENGTH = 10;
-
-    char s[DATE_TIME_BROKEN_DOWN_LENGTH];
-    char * s_pos = s;
-
-    /// A piece similar to unix timestamp.
-    while (s_pos < s + UNIX_TIMESTAMP_MAX_LENGTH && !buf.eof() && isNumericASCII(*buf.position()))
-    {
-        *s_pos = *buf.position();
-        ++s_pos;
-        ++buf.position();
-    }
-
-    /// 2015-01-01 01:02:03
-    if (s_pos == s + 4 && !buf.eof() && (*buf.position() < '0' || *buf.position() > '9'))
-    {
-        const size_t remaining_size = DATE_TIME_BROKEN_DOWN_LENGTH - (s_pos - s);
-        size_t size = buf.read(s_pos, remaining_size);
-        if (remaining_size != size)
-        {
-            s_pos[size] = 0;
-            throw Exception(std::string("Cannot parse datetime ") + s, ErrorCodes::CANNOT_PARSE_DATETIME);
-        }
-
-        UInt16 year = (s[0] - '0') * 1000 + (s[1] - '0') * 100 + (s[2] - '0') * 10 + (s[3] - '0');
-        UInt8 month = (s[5] - '0') * 10 + (s[6] - '0');
-        UInt8 day = (s[8] - '0') * 10 + (s[9] - '0');
-
-        UInt8 hour = (s[11] - '0') * 10 + (s[12] - '0');
-        UInt8 minute = (s[14] - '0') * 10 + (s[15] - '0');
-        UInt8 second = (s[17] - '0') * 10 + (s[18] - '0');
-
-        if (unlikely(year == 0))
-            datetime = 0;
-        else
-            datetime = date_lut.makeDateTime(year, month, day, hour, minute, second);
-    }
-    else
-        datetime = parse<time_t>(s, s_pos - s);
-}
+//void readDateTimeTextFallback(time_t & datetime, ReadBuffer & buf, const DateLUTImpl & date_lut)
+//{
+//    static constexpr auto DATE_TIME_BROKEN_DOWN_LENGTH = 19;
+//    static constexpr auto UNIX_TIMESTAMP_MAX_LENGTH = 10;
+//
+//    char s[DATE_TIME_BROKEN_DOWN_LENGTH];
+//    char * s_pos = s;
+//
+//    /// A piece similar to unix timestamp.
+//    while (s_pos < s + UNIX_TIMESTAMP_MAX_LENGTH && !buf.eof() && isNumericASCII(*buf.position()))
+//    {
+//        *s_pos = *buf.position();
+//        ++s_pos;
+//        ++buf.position();
+//    }
+//
+//    /// 2015-01-01 01:02:03
+//    if (s_pos == s + 4 && !buf.eof() && (*buf.position() < '0' || *buf.position() > '9'))
+//    {
+//        const size_t remaining_size = DATE_TIME_BROKEN_DOWN_LENGTH - (s_pos - s);
+//        size_t size = buf.read(s_pos, remaining_size);
+//        if (remaining_size != size)
+//        {
+//            s_pos[size] = 0;
+//            throw Exception(std::string("Cannot parse datetime ") + s, ErrorCodes::CANNOT_PARSE_DATETIME);
+//        }
+//
+//        UInt16 year = (s[0] - '0') * 1000 + (s[1] - '0') * 100 + (s[2] - '0') * 10 + (s[3] - '0');
+//        UInt8 month = (s[5] - '0') * 10 + (s[6] - '0');
+//        UInt8 day = (s[8] - '0') * 10 + (s[9] - '0');
+//
+//        UInt8 hour = (s[11] - '0') * 10 + (s[12] - '0');
+//        UInt8 minute = (s[14] - '0') * 10 + (s[15] - '0');
+//        UInt8 second = (s[17] - '0') * 10 + (s[18] - '0');
+//
+//        if (unlikely(year == 0))
+//            datetime = 0;
+//        else
+//            datetime = date_lut.makeDateTime(year, month, day, hour, minute, second);
+//    }
+//    else
+//        datetime = parse<time_t>(s, s_pos - s);
+//}
 
 
 void skipJSONFieldPlain(ReadBuffer & buf, const StringRef & name_of_filed)

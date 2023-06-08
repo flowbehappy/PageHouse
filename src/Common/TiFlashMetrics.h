@@ -14,19 +14,19 @@
 
 #pragma once
 
-#include <Common/ComputeLabelHolder.h>
-#include <Common/ProcessCollector.h>
-#include <Common/TiFlashBuildInfo.h>
+//#include <Common/ComputeLabelHolder.h>
+//#include <Common/ProcessCollector.h>
+//#include <Common/TiFlashBuildInfo.h>
 #include <Common/nocopyable.h>
 #include <Common/types.h>
-#include <prometheus/counter.h>
-#include <prometheus/exposer.h>
-#include <prometheus/gateway.h>
-#include <prometheus/gauge.h>
-#include <prometheus/histogram.h>
-#include <prometheus/registry.h>
+//#include <prometheus/counter.h>
+//#include <prometheus/exposer.h>
+//#include <prometheus/gateway.h>
+//#include <prometheus/gauge.h>
+//#include <prometheus/histogram.h>
+//#include <prometheus/registry.h>
 
-#include <ext/scope_guard.h>
+#include <Common/scope_guard.h>
 
 
 // to make GCC 11 happy
@@ -408,155 +408,155 @@ namespace DB
         F(type_page_read_bytes, {"type", "page_read_bytes"}))
 
 // clang-format on
-
-/// Buckets with boundaries [start * base^0, start * base^1, ..., start * base^(size-1)]
-struct ExpBuckets
-{
-    const double start;
-    const double base;
-    const size_t size;
-
-    // NOLINTNEXTLINE(google-explicit-constructor)
-    inline operator prometheus::Histogram::BucketBoundaries() const &&
-    {
-        prometheus::Histogram::BucketBoundaries buckets(size);
-        double current = start;
-        std::for_each(buckets.begin(), buckets.end(), [&](auto & e) {
-            e = current;
-            current *= base;
-        });
-        return buckets;
-    }
-};
-
-// Buckets with same width
-struct EqualWidthBuckets
-{
-    const size_t start;
-    const int num_buckets;
-    const size_t step;
-
-    // NOLINTNEXTLINE(google-explicit-constructor)
-    inline operator prometheus::Histogram::BucketBoundaries() const &&
-    {
-        // up to `num_buckets` * `step`
-        assert(step > 1);
-        prometheus::Histogram::BucketBoundaries buckets(num_buckets);
-        size_t idx = 0;
-        for (auto & e : buckets)
-        {
-            e = start + step * idx;
-            idx++;
-        }
-        return buckets;
-    }
-};
-
-template <typename T>
-struct MetricFamilyTrait
-{
-};
-template <>
-struct MetricFamilyTrait<prometheus::Counter>
-{
-    using ArgType = std::map<std::string, std::string>;
-    static auto build() { return prometheus::BuildCounter(); }
-    static auto & add(prometheus::Family<prometheus::Counter> & family, ArgType && arg) { return family.Add(std::forward<ArgType>(arg)); }
-};
-template <>
-struct MetricFamilyTrait<prometheus::Gauge>
-{
-    using ArgType = std::map<std::string, std::string>;
-    static auto build() { return prometheus::BuildGauge(); }
-    static auto & add(prometheus::Family<prometheus::Gauge> & family, ArgType && arg) { return family.Add(std::forward<ArgType>(arg)); }
-};
-template <>
-struct MetricFamilyTrait<prometheus::Histogram>
-{
-    using ArgType = std::tuple<std::map<std::string, std::string>, prometheus::Histogram::BucketBoundaries>;
-    static auto build() { return prometheus::BuildHistogram(); }
-    static auto & add(prometheus::Family<prometheus::Histogram> & family, ArgType && arg)
-    {
-        return family.Add(std::move(std::get<0>(arg)), std::move(std::get<1>(arg)));
-    }
-};
-
-template <typename T>
-struct MetricFamily
-{
-    using MetricTrait = MetricFamilyTrait<T>;
-    using MetricArgType = typename MetricTrait::ArgType;
-
-    MetricFamily(
-        prometheus::Registry & registry,
-        const std::string & name,
-        const std::string & help,
-        std::initializer_list<MetricArgType> args)
-    {
-        auto & family = MetricTrait::build().Name(name).Help(help).Register(registry);
-        metrics.reserve(args.size() ? args.size() : 1);
-        for (auto arg : args)
-        {
-            auto & metric = MetricTrait::add(family, std::forward<MetricArgType>(arg));
-            metrics.emplace_back(&metric);
-        }
-        if (metrics.empty())
-        {
-            auto & metric = MetricTrait::add(family, MetricArgType{});
-            metrics.emplace_back(&metric);
-        }
-    }
-
-    T & get(size_t idx = 0) { return *(metrics[idx]); }
-
-private:
-    std::vector<T *> metrics;
-};
-
-/// Centralized registry of TiFlash metrics.
-/// Cope with MetricsPrometheus by registering
-/// profile events, current metrics and customized metrics (as individual member for caller to access) into registry ahead of being updated.
-/// Asynchronous metrics will be however registered by MetricsPrometheus itself due to the life cycle difference.
-class TiFlashMetrics
-{
-public:
-    static TiFlashMetrics & instance();
-
-private:
-    TiFlashMetrics();
-
-    static constexpr auto profile_events_prefix = "tiflash_system_profile_event_";
-    static constexpr auto current_metrics_prefix = "tiflash_system_current_metric_";
-    static constexpr auto async_metrics_prefix = "tiflash_system_asynchronous_metric_";
-
-    std::shared_ptr<prometheus::Registry> registry = std::make_shared<prometheus::Registry>();
-    // Here we add a ProcessCollector to collect cpu/rss/vsize/start_time information.
-    // Normally, these metrics will be collected by tiflash-proxy,
-    // but in disaggregated compute mode with AutoScaler, tiflash-proxy will not start, so tiflash will collect these metrics itself.
-    std::shared_ptr<ProcessCollector> cn_process_collector = std::make_shared<ProcessCollector>();
-
-    std::vector<prometheus::Gauge *> registered_profile_events;
-    std::vector<prometheus::Gauge *> registered_current_metrics;
-    std::unordered_map<std::string, prometheus::Gauge *> registered_async_metrics;
-
-    prometheus::Family<prometheus::Gauge> * registered_keypace_store_used_family;
-    using KeyspaceID = UInt32;
-    std::unordered_map<KeyspaceID, prometheus::Gauge *> registered_keypace_store_used_metrics;
-    prometheus::Gauge * store_used_total_metric;
-
-public:
-#define MAKE_METRIC_MEMBER_M(family_name, help, type, ...) \
-    MetricFamily<prometheus::type> family_name = MetricFamily<prometheus::type>(*registry, #family_name, #help, {__VA_ARGS__});
-#define MAKE_METRIC_MEMBER_F(field_name, ...) \
-    {                                         \
-        __VA_ARGS__                           \
-    }
-    APPLY_FOR_METRICS(MAKE_METRIC_MEMBER_M, MAKE_METRIC_MEMBER_F)
-
-    DISALLOW_COPY_AND_MOVE(TiFlashMetrics);
-
-    friend class MetricsPrometheus;
-};
+//
+///// Buckets with boundaries [start * base^0, start * base^1, ..., start * base^(size-1)]
+//struct ExpBuckets
+//{
+//    const double start;
+//    const double base;
+//    const size_t size;
+//
+//    // NOLINTNEXTLINE(google-explicit-constructor)
+//    inline operator prometheus::Histogram::BucketBoundaries() const &&
+//    {
+//        prometheus::Histogram::BucketBoundaries buckets(size);
+//        double current = start;
+//        std::for_each(buckets.begin(), buckets.end(), [&](auto & e) {
+//            e = current;
+//            current *= base;
+//        });
+//        return buckets;
+//    }
+//};
+//
+//// Buckets with same width
+//struct EqualWidthBuckets
+//{
+//    const size_t start;
+//    const int num_buckets;
+//    const size_t step;
+//
+//    // NOLINTNEXTLINE(google-explicit-constructor)
+//    inline operator prometheus::Histogram::BucketBoundaries() const &&
+//    {
+//        // up to `num_buckets` * `step`
+//        assert(step > 1);
+//        prometheus::Histogram::BucketBoundaries buckets(num_buckets);
+//        size_t idx = 0;
+//        for (auto & e : buckets)
+//        {
+//            e = start + step * idx;
+//            idx++;
+//        }
+//        return buckets;
+//    }
+//};
+//
+//template <typename T>
+//struct MetricFamilyTrait
+//{
+//};
+//template <>
+//struct MetricFamilyTrait<prometheus::Counter>
+//{
+//    using ArgType = std::map<std::string, std::string>;
+//    static auto build() { return prometheus::BuildCounter(); }
+//    static auto & add(prometheus::Family<prometheus::Counter> & family, ArgType && arg) { return family.Add(std::forward<ArgType>(arg)); }
+//};
+//template <>
+//struct MetricFamilyTrait<prometheus::Gauge>
+//{
+//    using ArgType = std::map<std::string, std::string>;
+//    static auto build() { return prometheus::BuildGauge(); }
+//    static auto & add(prometheus::Family<prometheus::Gauge> & family, ArgType && arg) { return family.Add(std::forward<ArgType>(arg)); }
+//};
+//template <>
+//struct MetricFamilyTrait<prometheus::Histogram>
+//{
+//    using ArgType = std::tuple<std::map<std::string, std::string>, prometheus::Histogram::BucketBoundaries>;
+//    static auto build() { return prometheus::BuildHistogram(); }
+//    static auto & add(prometheus::Family<prometheus::Histogram> & family, ArgType && arg)
+//    {
+//        return family.Add(std::move(std::get<0>(arg)), std::move(std::get<1>(arg)));
+//    }
+//};
+//
+//template <typename T>
+//struct MetricFamily
+//{
+//    using MetricTrait = MetricFamilyTrait<T>;
+//    using MetricArgType = typename MetricTrait::ArgType;
+//
+//    MetricFamily(
+//        prometheus::Registry & registry,
+//        const std::string & name,
+//        const std::string & help,
+//        std::initializer_list<MetricArgType> args)
+//    {
+//        auto & family = MetricTrait::build().Name(name).Help(help).Register(registry);
+//        metrics.reserve(args.size() ? args.size() : 1);
+//        for (auto arg : args)
+//        {
+//            auto & metric = MetricTrait::add(family, std::forward<MetricArgType>(arg));
+//            metrics.emplace_back(&metric);
+//        }
+//        if (metrics.empty())
+//        {
+//            auto & metric = MetricTrait::add(family, MetricArgType{});
+//            metrics.emplace_back(&metric);
+//        }
+//    }
+//
+//    T & get(size_t idx = 0) { return *(metrics[idx]); }
+//
+//private:
+//    std::vector<T *> metrics;
+//};
+//
+///// Centralized registry of TiFlash metrics.
+///// Cope with MetricsPrometheus by registering
+///// profile events, current metrics and customized metrics (as individual member for caller to access) into registry ahead of being updated.
+///// Asynchronous metrics will be however registered by MetricsPrometheus itself due to the life cycle difference.
+//class TiFlashMetrics
+//{
+//public:
+//    static TiFlashMetrics & instance();
+//
+//private:
+//    TiFlashMetrics();
+//
+//    static constexpr auto profile_events_prefix = "tiflash_system_profile_event_";
+//    static constexpr auto current_metrics_prefix = "tiflash_system_current_metric_";
+//    static constexpr auto async_metrics_prefix = "tiflash_system_asynchronous_metric_";
+//
+//    std::shared_ptr<prometheus::Registry> registry = std::make_shared<prometheus::Registry>();
+//    // Here we add a ProcessCollector to collect cpu/rss/vsize/start_time information.
+//    // Normally, these metrics will be collected by tiflash-proxy,
+//    // but in disaggregated compute mode with AutoScaler, tiflash-proxy will not start, so tiflash will collect these metrics itself.
+//    std::shared_ptr<ProcessCollector> cn_process_collector = std::make_shared<ProcessCollector>();
+//
+//    std::vector<prometheus::Gauge *> registered_profile_events;
+//    std::vector<prometheus::Gauge *> registered_current_metrics;
+//    std::unordered_map<std::string, prometheus::Gauge *> registered_async_metrics;
+//
+//    prometheus::Family<prometheus::Gauge> * registered_keypace_store_used_family;
+//    using KeyspaceID = UInt32;
+//    std::unordered_map<KeyspaceID, prometheus::Gauge *> registered_keypace_store_used_metrics;
+//    prometheus::Gauge * store_used_total_metric;
+//
+//public:
+//#define MAKE_METRIC_MEMBER_M(family_name, help, type, ...) \
+//    MetricFamily<prometheus::type> family_name = MetricFamily<prometheus::type>(*registry, #family_name, #help, {__VA_ARGS__});
+//#define MAKE_METRIC_MEMBER_F(field_name, ...) \
+//    {                                         \
+//        __VA_ARGS__                           \
+//    }
+//    APPLY_FOR_METRICS(MAKE_METRIC_MEMBER_M, MAKE_METRIC_MEMBER_F)
+//
+//    DISALLOW_COPY_AND_MOVE(TiFlashMetrics);
+//
+//    friend class MetricsPrometheus;
+//};
 
 #define MAKE_METRIC_ENUM_M(family_name, help, type, ...) \
     namespace family_name##_metrics                      \

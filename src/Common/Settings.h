@@ -1,11 +1,15 @@
 #pragma
 
 #include <Common/types.h>
+#include <IO/CompressedStream.h>
 
 namespace DB
 {
 struct Settings
 {
+    CompressionMethod network_compression_method = CompressionMethod::LZ4;
+    Int64 network_zstd_compression_level = 1;
+
     UInt64 dt_segment_limit_rows = 1000000;
     UInt64 dt_segment_limit_size = 536870912;
     UInt64 dt_segment_force_split_size = 1610612736;

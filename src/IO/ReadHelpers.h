@@ -15,18 +15,18 @@
 #pragma once
 
 #include <Common/Arena.h>
-#include <Common/Decimal.h>
+//#include <Common/Decimal.h>
 #include <Common/Exception.h>
-#include <Common/MyTime.h>
+//#include <Common/MyTime.h>
 #include <Common/StringUtils/StringUtils.h>
 #include <Core/Types.h>
-#include <Core/UUID.h>
+//#include <Core/UUID.h>
 #include <IO/ReadBuffer.h>
 #include <IO/ReadBufferFromMemory.h>
 #include <IO/VarInt.h>
-#include <Common/DateLUT.h>
-#include <Common/LocalDate.h>
-#include <Common/LocalDateTime.h>
+//#include <Common/DateLUT.h>
+//#include <Common/LocalDate.h>
+//#include <Common/LocalDateTime.h>
 #include <Common/StringRef.h>
 #include <double-conversion/double-conversion.h>
 
@@ -266,100 +266,100 @@ inline void decimalRound(Int256 & value, ReadBuffer & buf)
     }
 }
 
-template <typename T>
-inline void readDecimalText(Decimal<T> & x, ReadBuffer & buf, PrecType precision, ScaleType scale)
-{
-    Int256 value(0); // Int256 is ok for 65 digits number at most.
-    bool negative = false;
-    bool fractional = false;
-    if (buf.eof())
-    {
-        throwReadAfterEOF();
-    }
-    size_t cur_scale = 0;
-    while (!buf.eof())
-    {
-        switch (*buf.position())
-        {
-        case '+':
-            break;
-        case '-':
-            negative = !negative;
-            break;
-        case '.':
-            if (fractional)
-            {
-                throw Exception("invalid format!");
-            }
-            fractional = true;
-            if (scale == 0)
-            {
-                decimalRound(value, buf);
-                if (negative)
-                    value = -value;
-                x.value = static_cast<T>(value);
-                checkDecimalOverflow(x, precision);
-                return;
-            }
-            break;
-        case '0':
-            [[fallthrough]];
-        case '1':
-            [[fallthrough]];
-        case '2':
-            [[fallthrough]];
-        case '3':
-            [[fallthrough]];
-        case '4':
-            [[fallthrough]];
-        case '5':
-            [[fallthrough]];
-        case '6':
-            [[fallthrough]];
-        case '7':
-            [[fallthrough]];
-        case '8':
-            [[fallthrough]];
-        case '9':
-            value *= 10;
-            value += *buf.position() - '0';
-            if (fractional)
-            {
-                cur_scale++;
-                if (scale == cur_scale)
-                {
-                    decimalRound(value, buf);
-                    if (negative)
-                        value = -value;
-                    x.value = static_cast<T>(value);
-                    checkDecimalOverflow(x, precision);
-                    return;
-                }
-            }
-            break;
-        default:
-            for (; cur_scale < scale; cur_scale++)
-            {
-                value *= 10;
-            }
-            if (negative)
-                value = -value;
-            x.value = static_cast<T>(value);
-            checkDecimalOverflow(x, precision);
-            return;
-        }
-        ++buf.position();
-    }
-    for (; cur_scale < scale; cur_scale++)
-    {
-        value *= 10;
-    }
-    if (negative)
-        value = -value;
-    x.value = static_cast<T>(value);
-    checkDecimalOverflow(x, precision);
-    return;
-}
+//template <typename T>
+//inline void readDecimalText(Decimal<T> & x, ReadBuffer & buf, PrecType precision, ScaleType scale)
+//{
+//    Int256 value(0); // Int256 is ok for 65 digits number at most.
+//    bool negative = false;
+//    bool fractional = false;
+//    if (buf.eof())
+//    {
+//        throwReadAfterEOF();
+//    }
+//    size_t cur_scale = 0;
+//    while (!buf.eof())
+//    {
+//        switch (*buf.position())
+//        {
+//        case '+':
+//            break;
+//        case '-':
+//            negative = !negative;
+//            break;
+//        case '.':
+//            if (fractional)
+//            {
+//                throw Exception("invalid format!");
+//            }
+//            fractional = true;
+//            if (scale == 0)
+//            {
+//                decimalRound(value, buf);
+//                if (negative)
+//                    value = -value;
+//                x.value = static_cast<T>(value);
+//                checkDecimalOverflow(x, precision);
+//                return;
+//            }
+//            break;
+//        case '0':
+//            [[fallthrough]];
+//        case '1':
+//            [[fallthrough]];
+//        case '2':
+//            [[fallthrough]];
+//        case '3':
+//            [[fallthrough]];
+//        case '4':
+//            [[fallthrough]];
+//        case '5':
+//            [[fallthrough]];
+//        case '6':
+//            [[fallthrough]];
+//        case '7':
+//            [[fallthrough]];
+//        case '8':
+//            [[fallthrough]];
+//        case '9':
+//            value *= 10;
+//            value += *buf.position() - '0';
+//            if (fractional)
+//            {
+//                cur_scale++;
+//                if (scale == cur_scale)
+//                {
+//                    decimalRound(value, buf);
+//                    if (negative)
+//                        value = -value;
+//                    x.value = static_cast<T>(value);
+//                    checkDecimalOverflow(x, precision);
+//                    return;
+//                }
+//            }
+//            break;
+//        default:
+//            for (; cur_scale < scale; cur_scale++)
+//            {
+//                value *= 10;
+//            }
+//            if (negative)
+//                value = -value;
+//            x.value = static_cast<T>(value);
+//            checkDecimalOverflow(x, precision);
+//            return;
+//        }
+//        ++buf.position();
+//    }
+//    for (; cur_scale < scale; cur_scale++)
+//    {
+//        value *= 10;
+//    }
+//    if (negative)
+//        value = -value;
+//    x.value = static_cast<T>(value);
+//    checkDecimalOverflow(x, precision);
+//    return;
+//}
 
 template <typename T, typename ReturnType = void>
 ReturnType readIntTextImpl(T & x, ReadBuffer & buf)
@@ -591,270 +591,270 @@ void parseUUID(const UInt8 * src36, std::reverse_iterator<UInt8 *> dst16);
 template <typename IteratorSrc, typename IteratorDst>
 void formatHex(IteratorSrc src, IteratorDst dst, const size_t num_bytes);
 
-template <typename ReturnType = void>
-ReturnType readMyDateTextImpl(UInt64 & date, ReadBuffer & buf)
-{
-    static constexpr bool throw_exception = std::is_same_v<ReturnType, void>;
+//template <typename ReturnType = void>
+//ReturnType readMyDateTextImpl(UInt64 & date, ReadBuffer & buf)
+//{
+//    static constexpr bool throw_exception = std::is_same_v<ReturnType, void>;
+//
+//    /// Optimistic path, when whole value is in buffer.
+//    if (buf.position() + 10 <= buf.buffer().end())
+//    {
+//        UInt16 year = (buf.position()[0] - '0') * 1000 + (buf.position()[1] - '0') * 100 + (buf.position()[2] - '0') * 10 + (buf.position()[3] - '0');
+//        buf.position() += 5;
+//
+//        UInt8 month = buf.position()[0] - '0';
+//        if (isNumericASCII(buf.position()[1]))
+//        {
+//            month = month * 10 + buf.position()[1] - '0';
+//            buf.position() += 3;
+//        }
+//        else
+//            buf.position() += 2;
+//
+//        UInt8 day = buf.position()[0] - '0';
+//        if (isNumericASCII(buf.position()[1]))
+//        {
+//            day = day * 10 + buf.position()[1] - '0';
+//            buf.position() += 2;
+//        }
+//        else
+//            buf.position() += 1;
+//
+//        date = MyDate(year, month, day).toPackedUInt();
+//        return ReturnType(true);
+//    }
+//
+//    if constexpr (throw_exception)
+//        throw Exception("wrong date format.", ErrorCodes::CANNOT_PARSE_DATE);
+//    else
+//        return ReturnType(false);
+//}
 
-    /// Optimistic path, when whole value is in buffer.
-    if (buf.position() + 10 <= buf.buffer().end())
-    {
-        UInt16 year = (buf.position()[0] - '0') * 1000 + (buf.position()[1] - '0') * 100 + (buf.position()[2] - '0') * 10 + (buf.position()[3] - '0');
-        buf.position() += 5;
-
-        UInt8 month = buf.position()[0] - '0';
-        if (isNumericASCII(buf.position()[1]))
-        {
-            month = month * 10 + buf.position()[1] - '0';
-            buf.position() += 3;
-        }
-        else
-            buf.position() += 2;
-
-        UInt8 day = buf.position()[0] - '0';
-        if (isNumericASCII(buf.position()[1]))
-        {
-            day = day * 10 + buf.position()[1] - '0';
-            buf.position() += 2;
-        }
-        else
-            buf.position() += 1;
-
-        date = MyDate(year, month, day).toPackedUInt();
-        return ReturnType(true);
-    }
-
-    if constexpr (throw_exception)
-        throw Exception("wrong date format.", ErrorCodes::CANNOT_PARSE_DATE);
-    else
-        return ReturnType(false);
-}
-
-inline void readMyDateText(UInt64 & date, ReadBuffer & buf)
-{
-    readMyDateTextImpl<void>(date, buf);
-}
-
-inline bool tryReadMyDateText(UInt64 & x, ReadBuffer & buf)
-{
-    UInt64 tmp(0);
-    bool ret = readMyDateTextImpl<bool>(tmp, buf);
-    if (ret)
-        x = tmp;
-    return ret;
-}
-
-
-void readDateTextFallback(LocalDate & date, ReadBuffer & buf);
-
-/// In YYYY-MM-DD format.
-/// For convenience, Month and Day parts can have single digit instead of two digits.
-/// Any separators other than '-' are supported.
-inline void readDateText(LocalDate & date, ReadBuffer & buf)
-{
-    /// Optimistic path, when whole value is in buffer.
-    if (buf.position() + 10 <= buf.buffer().end())
-    {
-        UInt16 year = (buf.position()[0] - '0') * 1000 + (buf.position()[1] - '0') * 100 + (buf.position()[2] - '0') * 10 + (buf.position()[3] - '0');
-        buf.position() += 5;
-
-        UInt8 month = buf.position()[0] - '0';
-        if (isNumericASCII(buf.position()[1]))
-        {
-            month = month * 10 + buf.position()[1] - '0';
-            buf.position() += 3;
-        }
-        else
-            buf.position() += 2;
-
-        UInt8 day = buf.position()[0] - '0';
-        if (isNumericASCII(buf.position()[1]))
-        {
-            day = day * 10 + buf.position()[1] - '0';
-            buf.position() += 2;
-        }
-        else
-            buf.position() += 1;
-
-        date = LocalDate(year, month, day);
-    }
-    else
-        readDateTextFallback(date, buf);
-}
-
-inline void readDateText(DayNum & date, ReadBuffer & buf)
-{
-    LocalDate local_date;
-    readDateText(local_date, buf);
-    date = DateLUT::instance().makeDayNum(local_date.year(), local_date.month(), local_date.day());
-}
-
-
-inline void readUUIDText(UUID & uuid, ReadBuffer & buf)
-{
-    char s[36];
-    size_t size = buf.read(s, 36);
-
-    if (size != 36)
-    {
-        s[size] = 0;
-        throw Exception(std::string("Cannot parse uuid ") + s, ErrorCodes::CANNOT_PARSE_UUID);
-    }
-
-    parseUUID(reinterpret_cast<const UInt8 *>(s), std::reverse_iterator<UInt8 *>(reinterpret_cast<UInt8 *>(&uuid) + 16));
-}
+//inline void readMyDateText(UInt64 & date, ReadBuffer & buf)
+//{
+//    readMyDateTextImpl<void>(date, buf);
+//}
+//
+//inline bool tryReadMyDateText(UInt64 & x, ReadBuffer & buf)
+//{
+//    UInt64 tmp(0);
+//    bool ret = readMyDateTextImpl<bool>(tmp, buf);
+//    if (ret)
+//        x = tmp;
+//    return ret;
+//}
+//
+//
+//void readDateTextFallback(LocalDate & date, ReadBuffer & buf);
+//
+///// In YYYY-MM-DD format.
+///// For convenience, Month and Day parts can have single digit instead of two digits.
+///// Any separators other than '-' are supported.
+//inline void readDateText(LocalDate & date, ReadBuffer & buf)
+//{
+//    /// Optimistic path, when whole value is in buffer.
+//    if (buf.position() + 10 <= buf.buffer().end())
+//    {
+//        UInt16 year = (buf.position()[0] - '0') * 1000 + (buf.position()[1] - '0') * 100 + (buf.position()[2] - '0') * 10 + (buf.position()[3] - '0');
+//        buf.position() += 5;
+//
+//        UInt8 month = buf.position()[0] - '0';
+//        if (isNumericASCII(buf.position()[1]))
+//        {
+//            month = month * 10 + buf.position()[1] - '0';
+//            buf.position() += 3;
+//        }
+//        else
+//            buf.position() += 2;
+//
+//        UInt8 day = buf.position()[0] - '0';
+//        if (isNumericASCII(buf.position()[1]))
+//        {
+//            day = day * 10 + buf.position()[1] - '0';
+//            buf.position() += 2;
+//        }
+//        else
+//            buf.position() += 1;
+//
+//        date = LocalDate(year, month, day);
+//    }
+//    else
+//        readDateTextFallback(date, buf);
+//}
+//
+//inline void readDateText(DayNum & date, ReadBuffer & buf)
+//{
+//    LocalDate local_date;
+//    readDateText(local_date, buf);
+//    date = DateLUT::instance().makeDayNum(local_date.year(), local_date.month(), local_date.day());
+//}
+//
+//
+//inline void readUUIDText(UUID & uuid, ReadBuffer & buf)
+//{
+//    char s[36];
+//    size_t size = buf.read(s, 36);
+//
+//    if (size != 36)
+//    {
+//        s[size] = 0;
+//        throw Exception(std::string("Cannot parse uuid ") + s, ErrorCodes::CANNOT_PARSE_UUID);
+//    }
+//
+//    parseUUID(reinterpret_cast<const UInt8 *>(s), std::reverse_iterator<UInt8 *>(reinterpret_cast<UInt8 *>(&uuid) + 16));
+//}
 
 
 template <typename T>
 inline T parse(const char * data, size_t size);
 
 
-void readDateTimeTextFallback(time_t & datetime, ReadBuffer & buf, const DateLUTImpl & date_lut);
-
-template <typename ReturnType = void>
-ReturnType readMyDateTimeTextImpl(UInt64 & packed, int fsp, ReadBuffer & buf)
-{
-    static constexpr bool throw_exception = std::is_same_v<ReturnType, void>;
-
-    const char * s = buf.position();
-    if (s + 19 <= buf.buffer().end())
-    {
-        if (s[4] < '0' || s[4] > '9')
-        {
-            UInt16 year = (s[0] - '0') * 1000 + (s[1] - '0') * 100 + (s[2] - '0') * 10 + (s[3] - '0');
-            UInt8 month = (s[5] - '0') * 10 + (s[6] - '0');
-            UInt8 day = (s[8] - '0') * 10 + (s[9] - '0');
-
-            UInt8 hour = (s[11] - '0') * 10 + (s[12] - '0');
-            UInt8 minute = (s[14] - '0') * 10 + (s[15] - '0');
-            UInt8 second = (s[17] - '0') * 10 + (s[18] - '0');
-
-            UInt32 micro_second = 0;
-            bool fractional = false;
-            int digit = 0;
-            buf.position() += 19;
-            while (buf.position() <= buf.buffer().end())
-            {
-                char x = *buf.position();
-                if (x == '.')
-                {
-                    fractional = true;
-                }
-                else if (!fractional)
-                {
-                    break;
-                }
-                else if (x <= '9' && x >= '0')
-                {
-                    if (digit < fsp)
-                    {
-                        micro_second = micro_second * 10 + (x - '0');
-                        digit++;
-                    }
-                }
-                else
-                {
-                    break;
-                }
-                buf.position()++;
-            }
-            for (; digit < 6; digit++)
-                micro_second *= 10;
-
-            packed = MyDateTime(year, month, day, hour, minute, second, micro_second).toPackedUInt();
-            return ReturnType(true);
-        }
-    }
-    else if (s + 10 <= buf.buffer().end())
-    {
-        // try to parse it as MyDate
-        return readMyDateTextImpl<ReturnType>(packed, buf);
-    }
-
-    if constexpr (throw_exception)
-        throw Exception("wrong datetime format.", ErrorCodes::CANNOT_PARSE_DATETIME);
-    else
-        return ReturnType(false);
-}
-
-inline void readMyDateTimeText(UInt64 & packed, int fsp, ReadBuffer & buf)
-{
-    readMyDateTimeTextImpl<void>(packed, fsp, buf);
-}
-
-inline bool tryReadMyDateTimeText(UInt64 & x, int fsp, ReadBuffer & buf)
-{
-    UInt64 tmp(0);
-    bool ret = readMyDateTimeTextImpl<bool>(tmp, fsp, buf);
-    if (ret)
-        x = tmp;
-    return ret;
-}
-/** In YYYY-MM-DD hh:mm:ss format, according to specified time zone.
-  * As an exception, also supported parsing of unix timestamp in form of decimal number.
-  */
-inline void readDateTimeText(time_t & datetime, ReadBuffer & buf, const DateLUTImpl & date_lut)
-{
-    /** Read 10 characters, that could represent unix timestamp.
-      * Only unix timestamp of 5-10 characters is supported.
-      * Then look at 5th charater. If it is a number - treat whole as unix timestamp.
-      * If it is not a number - then parse datetime in YYYY-MM-DD hh:mm:ss format.
-      */
-
-    /// Optimistic path, when whole value is in buffer.
-    const char * s = buf.position();
-    if (s + 19 <= buf.buffer().end())
-    {
-        if (s[4] < '0' || s[4] > '9')
-        {
-            UInt16 year = (s[0] - '0') * 1000 + (s[1] - '0') * 100 + (s[2] - '0') * 10 + (s[3] - '0');
-            UInt8 month = (s[5] - '0') * 10 + (s[6] - '0');
-            UInt8 day = (s[8] - '0') * 10 + (s[9] - '0');
-
-            UInt8 hour = (s[11] - '0') * 10 + (s[12] - '0');
-            UInt8 minute = (s[14] - '0') * 10 + (s[15] - '0');
-            UInt8 second = (s[17] - '0') * 10 + (s[18] - '0');
-
-            if (unlikely(year == 0))
-                datetime = 0;
-            else
-                datetime = date_lut.makeDateTime(year, month, day, hour, minute, second);
-
-            buf.position() += 19;
-        }
-        else
-            /// Why not readIntTextUnsafe? Because for needs of AdFox, parsing of unix timestamp with leading zeros is supported: 000...NNNN.
-            readIntText(datetime, buf);
-    }
-    else
-        readDateTimeTextFallback(datetime, buf, date_lut);
-}
-
-inline void readDateTimeText(time_t & datetime, ReadBuffer & buf)
-{
-    readDateTimeText(datetime, buf, DateLUT::instance());
-}
-
-inline void readDateTimeText(LocalDateTime & datetime, ReadBuffer & buf)
-{
-    char s[19];
-    size_t size = buf.read(s, 19);
-    if (19 != size)
-    {
-        s[size] = 0;
-        throw Exception(std::string("Cannot parse datetime ") + s, ErrorCodes::CANNOT_PARSE_DATETIME);
-    }
-
-    datetime.year((s[0] - '0') * 1000 + (s[1] - '0') * 100 + (s[2] - '0') * 10 + (s[3] - '0'));
-    datetime.month((s[5] - '0') * 10 + (s[6] - '0'));
-    datetime.day((s[8] - '0') * 10 + (s[9] - '0'));
-
-    datetime.hour((s[11] - '0') * 10 + (s[12] - '0'));
-    datetime.minute((s[14] - '0') * 10 + (s[15] - '0'));
-    datetime.second((s[17] - '0') * 10 + (s[18] - '0'));
-}
-
-
+//void readDateTimeTextFallback(time_t & datetime, ReadBuffer & buf, const DateLUTImpl & date_lut);
+//
+//template <typename ReturnType = void>
+//ReturnType readMyDateTimeTextImpl(UInt64 & packed, int fsp, ReadBuffer & buf)
+//{
+//    static constexpr bool throw_exception = std::is_same_v<ReturnType, void>;
+//
+//    const char * s = buf.position();
+//    if (s + 19 <= buf.buffer().end())
+//    {
+//        if (s[4] < '0' || s[4] > '9')
+//        {
+//            UInt16 year = (s[0] - '0') * 1000 + (s[1] - '0') * 100 + (s[2] - '0') * 10 + (s[3] - '0');
+//            UInt8 month = (s[5] - '0') * 10 + (s[6] - '0');
+//            UInt8 day = (s[8] - '0') * 10 + (s[9] - '0');
+//
+//            UInt8 hour = (s[11] - '0') * 10 + (s[12] - '0');
+//            UInt8 minute = (s[14] - '0') * 10 + (s[15] - '0');
+//            UInt8 second = (s[17] - '0') * 10 + (s[18] - '0');
+//
+//            UInt32 micro_second = 0;
+//            bool fractional = false;
+//            int digit = 0;
+//            buf.position() += 19;
+//            while (buf.position() <= buf.buffer().end())
+//            {
+//                char x = *buf.position();
+//                if (x == '.')
+//                {
+//                    fractional = true;
+//                }
+//                else if (!fractional)
+//                {
+//                    break;
+//                }
+//                else if (x <= '9' && x >= '0')
+//                {
+//                    if (digit < fsp)
+//                    {
+//                        micro_second = micro_second * 10 + (x - '0');
+//                        digit++;
+//                    }
+//                }
+//                else
+//                {
+//                    break;
+//                }
+//                buf.position()++;
+//            }
+//            for (; digit < 6; digit++)
+//                micro_second *= 10;
+//
+//            packed = MyDateTime(year, month, day, hour, minute, second, micro_second).toPackedUInt();
+//            return ReturnType(true);
+//        }
+//    }
+//    else if (s + 10 <= buf.buffer().end())
+//    {
+//        // try to parse it as MyDate
+//        return readMyDateTextImpl<ReturnType>(packed, buf);
+//    }
+//
+//    if constexpr (throw_exception)
+//        throw Exception("wrong datetime format.", ErrorCodes::CANNOT_PARSE_DATETIME);
+//    else
+//        return ReturnType(false);
+//}
+//
+//inline void readMyDateTimeText(UInt64 & packed, int fsp, ReadBuffer & buf)
+//{
+//    readMyDateTimeTextImpl<void>(packed, fsp, buf);
+//}
+//
+//inline bool tryReadMyDateTimeText(UInt64 & x, int fsp, ReadBuffer & buf)
+//{
+//    UInt64 tmp(0);
+//    bool ret = readMyDateTimeTextImpl<bool>(tmp, fsp, buf);
+//    if (ret)
+//        x = tmp;
+//    return ret;
+//}
+///** In YYYY-MM-DD hh:mm:ss format, according to specified time zone.
+//  * As an exception, also supported parsing of unix timestamp in form of decimal number.
+//  */
+//inline void readDateTimeText(time_t & datetime, ReadBuffer & buf, const DateLUTImpl & date_lut)
+//{
+//    /** Read 10 characters, that could represent unix timestamp.
+//      * Only unix timestamp of 5-10 characters is supported.
+//      * Then look at 5th charater. If it is a number - treat whole as unix timestamp.
+//      * If it is not a number - then parse datetime in YYYY-MM-DD hh:mm:ss format.
+//      */
+//
+//    /// Optimistic path, when whole value is in buffer.
+//    const char * s = buf.position();
+//    if (s + 19 <= buf.buffer().end())
+//    {
+//        if (s[4] < '0' || s[4] > '9')
+//        {
+//            UInt16 year = (s[0] - '0') * 1000 + (s[1] - '0') * 100 + (s[2] - '0') * 10 + (s[3] - '0');
+//            UInt8 month = (s[5] - '0') * 10 + (s[6] - '0');
+//            UInt8 day = (s[8] - '0') * 10 + (s[9] - '0');
+//
+//            UInt8 hour = (s[11] - '0') * 10 + (s[12] - '0');
+//            UInt8 minute = (s[14] - '0') * 10 + (s[15] - '0');
+//            UInt8 second = (s[17] - '0') * 10 + (s[18] - '0');
+//
+//            if (unlikely(year == 0))
+//                datetime = 0;
+//            else
+//                datetime = date_lut.makeDateTime(year, month, day, hour, minute, second);
+//
+//            buf.position() += 19;
+//        }
+//        else
+//            /// Why not readIntTextUnsafe? Because for needs of AdFox, parsing of unix timestamp with leading zeros is supported: 000...NNNN.
+//            readIntText(datetime, buf);
+//    }
+//    else
+//        readDateTimeTextFallback(datetime, buf, date_lut);
+//}
+//
+//inline void readDateTimeText(time_t & datetime, ReadBuffer & buf)
+//{
+//    readDateTimeText(datetime, buf, DateLUT::instance());
+//}
+//
+//inline void readDateTimeText(LocalDateTime & datetime, ReadBuffer & buf)
+//{
+//    char s[19];
+//    size_t size = buf.read(s, 19);
+//    if (19 != size)
+//    {
+//        s[size] = 0;
+//        throw Exception(std::string("Cannot parse datetime ") + s, ErrorCodes::CANNOT_PARSE_DATETIME);
+//    }
+//
+//    datetime.year((s[0] - '0') * 1000 + (s[1] - '0') * 100 + (s[2] - '0') * 10 + (s[3] - '0'));
+//    datetime.month((s[5] - '0') * 10 + (s[6] - '0'));
+//    datetime.day((s[8] - '0') * 10 + (s[9] - '0'));
+//
+//    datetime.hour((s[11] - '0') * 10 + (s[12] - '0'));
+//    datetime.minute((s[14] - '0') * 10 + (s[15] - '0'));
+//    datetime.second((s[17] - '0') * 10 + (s[18] - '0'));
+//}
+//
+//
 /// Generic methods to read value in native binary format.
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic_v<T>, void>
@@ -875,21 +875,21 @@ inline void readBinary(UInt256 & x, ReadBuffer & buf)
 {
     readPODBinary(x, buf);
 }
-inline void readBinary(LocalDate & x, ReadBuffer & buf)
-{
-    readPODBinary(x, buf);
-}
-inline void readBinary(LocalDateTime & x, ReadBuffer & buf)
-{
-    readPODBinary(x, buf);
-}
-template <typename T>
-inline void readBinary(Decimal<T> & x, ReadBuffer & buf)
-{
-    readPODBinary(x, buf);
-}
-
-
+//inline void readBinary(LocalDate & x, ReadBuffer & buf)
+//{
+//    readPODBinary(x, buf);
+//}
+//inline void readBinary(LocalDateTime & x, ReadBuffer & buf)
+//{
+//    readPODBinary(x, buf);
+//}
+//template <typename T>
+//inline void readBinary(Decimal<T> & x, ReadBuffer & buf)
+//{
+//    readPODBinary(x, buf);
+//}
+//
+//
 /// Generic methods to read value in text tab-separated format.
 template <typename T>
 inline std::enable_if_t<std::is_integral_v<T>, void>
@@ -913,28 +913,28 @@ inline void readText(String & x, ReadBuffer & buf)
 {
     readEscapedString(x, buf);
 }
-inline void readText(LocalDate & x, ReadBuffer & buf)
-{
-    readDateText(x, buf);
-}
-inline void readText(LocalDateTime & x, ReadBuffer & buf)
-{
-    readDateTimeText(x, buf);
-}
-inline void readText(UUID & x, ReadBuffer & buf)
-{
-    readUUIDText(x, buf);
-}
-inline void readText(UInt128 &, ReadBuffer &)
-{
-    /** Because UInt128 isn't a natural type, without arithmetic operator and only use as an intermediary type -for UUID-
-     *  it should never arrive here. But because we used the DataTypeNumber class we should have at least a definition of it.
-     */
-    throw Exception("UInt128 cannot be read as a text", ErrorCodes::ILLEGAL_TYPE_OF_ARGUMENT);
-}
-
-/// Generic methods to read value in text format,
-///  possibly in single quotes (only for data types that use quotes in VALUES format of INSERT statement in SQL).
+//inline void readText(LocalDate & x, ReadBuffer & buf)
+//{
+//    readDateText(x, buf);
+//}
+//inline void readText(LocalDateTime & x, ReadBuffer & buf)
+//{
+//    readDateTimeText(x, buf);
+//}
+//inline void readText(UUID & x, ReadBuffer & buf)
+//{
+//    readUUIDText(x, buf);
+//}
+//inline void readText(UInt128 &, ReadBuffer &)
+//{
+//    /** Because UInt128 isn't a natural type, without arithmetic operator and only use as an intermediary type -for UUID-
+//     *  it should never arrive here. But because we used the DataTypeNumber class we should have at least a definition of it.
+//     */
+//    throw Exception("UInt128 cannot be read as a text", ErrorCodes::ILLEGAL_TYPE_OF_ARGUMENT);
+//}
+//
+///// Generic methods to read value in text format,
+/////  possibly in single quotes (only for data types that use quotes in VALUES format of INSERT statement in SQL).
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic_v<T>, void>
 readQuoted(T & x, ReadBuffer & buf)
@@ -947,22 +947,22 @@ inline void readQuoted(String & x, ReadBuffer & buf)
     readQuotedString(x, buf);
 }
 
-inline void readQuoted(LocalDate & x, ReadBuffer & buf)
-{
-    assertChar('\'', buf);
-    readDateText(x, buf);
-    assertChar('\'', buf);
-}
-
-inline void readQuoted(LocalDateTime & x, ReadBuffer & buf)
-{
-    assertChar('\'', buf);
-    readDateTimeText(x, buf);
-    assertChar('\'', buf);
-}
-
-
-/// Same as above, but in double quotes.
+//inline void readQuoted(LocalDate & x, ReadBuffer & buf)
+//{
+//    assertChar('\'', buf);
+//    readDateText(x, buf);
+//    assertChar('\'', buf);
+//}
+//
+//inline void readQuoted(LocalDateTime & x, ReadBuffer & buf)
+//{
+//    assertChar('\'', buf);
+//    readDateTimeText(x, buf);
+//    assertChar('\'', buf);
+//}
+//
+//
+///// Same as above, but in double quotes.
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic_v<T>, void>
 readDoubleQuoted(T & x, ReadBuffer & buf)
@@ -970,92 +970,92 @@ readDoubleQuoted(T & x, ReadBuffer & buf)
     readText(x, buf);
 }
 
-inline void readDoubleQuoted(String & x, ReadBuffer & buf)
-{
-    readDoubleQuotedString(x, buf);
-}
+//inline void readDoubleQuoted(String & x, ReadBuffer & buf)
+//{
+//    readDoubleQuotedString(x, buf);
+//}
+//
+//inline void readDoubleQuoted(LocalDate & x, ReadBuffer & buf)
+//{
+//    assertChar('"', buf);
+//    readDateText(x, buf);
+//    assertChar('"', buf);
+//}
+//
+//inline void readDoubleQuoted(LocalDateTime & x, ReadBuffer & buf)
+//{
+//    assertChar('"', buf);
+//    readDateTimeText(x, buf);
+//    assertChar('"', buf);
+//}
 
-inline void readDoubleQuoted(LocalDate & x, ReadBuffer & buf)
-{
-    assertChar('"', buf);
-    readDateText(x, buf);
-    assertChar('"', buf);
-}
 
-inline void readDoubleQuoted(LocalDateTime & x, ReadBuffer & buf)
-{
-    assertChar('"', buf);
-    readDateTimeText(x, buf);
-    assertChar('"', buf);
-}
-
-
-/// CSV, for numbers, dates: quotes are optional, no special escaping rules.
-template <typename T>
-inline void readCSVSimple(T & x, ReadBuffer & buf)
-{
-    if (buf.eof())
-        throwReadAfterEOF();
-
-    char maybe_quote = *buf.position();
-
-    if (maybe_quote == '\'' || maybe_quote == '\"')
-        ++buf.position();
-
-    readText(x, buf);
-
-    if (maybe_quote == '\'' || maybe_quote == '\"')
-        assertChar(maybe_quote, buf);
-}
-
-template <typename T>
-inline void readCSVDecimal(Decimal<T> & x, ReadBuffer & buf, PrecType precision, ScaleType scale)
-{
-    if (buf.eof())
-        throwReadAfterEOF();
-
-    char maybe_quote = *buf.position();
-
-    if (maybe_quote == '\'' || maybe_quote == '\"')
-        ++buf.position();
-
-    readDecimalText(x, buf, precision, scale);
-
-    if (maybe_quote == '\'' || maybe_quote == '\"')
-        assertChar(maybe_quote, buf);
-}
-
-inline void readMyDateTimeCSV(UInt64 & datetime, int fsp, ReadBuffer & buf)
-{
-    if (buf.eof())
-        throwReadAfterEOF();
-
-    char maybe_quote = *buf.position();
-
-    if (maybe_quote == '\'' || maybe_quote == '\"')
-        ++buf.position();
-
-    readMyDateTimeText(datetime, fsp, buf);
-
-    if (maybe_quote == '\'' || maybe_quote == '\"')
-        assertChar(maybe_quote, buf);
-}
-
-inline void readDateTimeCSV(time_t & datetime, ReadBuffer & buf, const DateLUTImpl & date_lut)
-{
-    if (buf.eof())
-        throwReadAfterEOF();
-
-    char maybe_quote = *buf.position();
-
-    if (maybe_quote == '\'' || maybe_quote == '\"')
-        ++buf.position();
-
-    readDateTimeText(datetime, buf, date_lut);
-
-    if (maybe_quote == '\'' || maybe_quote == '\"')
-        assertChar(maybe_quote, buf);
-}
+///// CSV, for numbers, dates: quotes are optional, no special escaping rules.
+//template <typename T>
+//inline void readCSVSimple(T & x, ReadBuffer & buf)
+//{
+//    if (buf.eof())
+//        throwReadAfterEOF();
+//
+//    char maybe_quote = *buf.position();
+//
+//    if (maybe_quote == '\'' || maybe_quote == '\"')
+//        ++buf.position();
+//
+//    readText(x, buf);
+//
+//    if (maybe_quote == '\'' || maybe_quote == '\"')
+//        assertChar(maybe_quote, buf);
+//}
+//
+//template <typename T>
+//inline void readCSVDecimal(Decimal<T> & x, ReadBuffer & buf, PrecType precision, ScaleType scale)
+//{
+//    if (buf.eof())
+//        throwReadAfterEOF();
+//
+//    char maybe_quote = *buf.position();
+//
+//    if (maybe_quote == '\'' || maybe_quote == '\"')
+//        ++buf.position();
+//
+//    readDecimalText(x, buf, precision, scale);
+//
+//    if (maybe_quote == '\'' || maybe_quote == '\"')
+//        assertChar(maybe_quote, buf);
+//}
+//
+//inline void readMyDateTimeCSV(UInt64 & datetime, int fsp, ReadBuffer & buf)
+//{
+//    if (buf.eof())
+//        throwReadAfterEOF();
+//
+//    char maybe_quote = *buf.position();
+//
+//    if (maybe_quote == '\'' || maybe_quote == '\"')
+//        ++buf.position();
+//
+//    readMyDateTimeText(datetime, fsp, buf);
+//
+//    if (maybe_quote == '\'' || maybe_quote == '\"')
+//        assertChar(maybe_quote, buf);
+//}
+//
+//inline void readDateTimeCSV(time_t & datetime, ReadBuffer & buf, const DateLUTImpl & date_lut)
+//{
+//    if (buf.eof())
+//        throwReadAfterEOF();
+//
+//    char maybe_quote = *buf.position();
+//
+//    if (maybe_quote == '\'' || maybe_quote == '\"')
+//        ++buf.position();
+//
+//    readDateTimeText(datetime, buf, date_lut);
+//
+//    if (maybe_quote == '\'' || maybe_quote == '\"')
+//        assertChar(maybe_quote, buf);
+//}
 
 template <typename T>
 inline std::enable_if_t<std::is_arithmetic_v<T>, void>
@@ -1068,18 +1068,18 @@ inline void readCSV(String & x, ReadBuffer & buf, const char delimiter = ',')
 {
     readCSVString(x, buf, delimiter);
 }
-inline void readCSV(LocalDate & x, ReadBuffer & buf)
-{
-    readCSVSimple(x, buf);
-}
-inline void readCSV(LocalDateTime & x, ReadBuffer & buf)
-{
-    readCSVSimple(x, buf);
-}
-inline void readCSV(UUID & x, ReadBuffer & buf)
-{
-    readCSVSimple(x, buf);
-}
+//inline void readCSV(LocalDate & x, ReadBuffer & buf)
+//{
+//    readCSVSimple(x, buf);
+//}
+//inline void readCSV(LocalDateTime & x, ReadBuffer & buf)
+//{
+//    readCSVSimple(x, buf);
+//}
+//inline void readCSV(UUID & x, ReadBuffer & buf)
+//{
+//    readCSVSimple(x, buf);
+//}
 inline void readCSV(UInt128 &, ReadBuffer &)
 {
     /** Because UInt128 isn't a natural type, without arithmetic operator and only use as an intermediary type -for UUID-

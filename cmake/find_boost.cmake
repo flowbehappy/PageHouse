@@ -14,6 +14,8 @@
 
 option (USE_INTERNAL_BOOST_LIBRARY "Set to FALSE to use system boost library instead of bundled" ${NOT_UNBUNDLED})
 
+message (STATUS "NOT_UNBUNDLED=${NOT_UNBUNDLED}, USE_INTERNAL_BOOST_LIBRARY=${USE_INTERNAL_BOOST_LIBRARY}")
+
 # Test random file existing in all package variants
 if (USE_INTERNAL_BOOST_LIBRARY AND NOT EXISTS "${PageHouse_SOURCE_DIR}/contrib/boost/libs/filesystem/src/path.cpp")
    message (WARNING "submodules in contrib/boost is missing. to fix try run: \n git submodule update --init --recursive")

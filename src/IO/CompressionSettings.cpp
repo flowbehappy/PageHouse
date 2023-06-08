@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "CompressionSettings.h"
+#include <IO/CompressionSettings.h>
 
-#include <Interpreters/Settings.h>
 #include <lz4hc.h>
 
 

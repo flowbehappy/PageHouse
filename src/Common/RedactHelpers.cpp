@@ -14,9 +14,9 @@
 
 #include <Common/RedactHelpers.h>
 #include <Common/hex.h>
+#include <Common/types.h>
 #include <IO/WriteHelpers.h>
-#include <common/types.h>
-#include <pingcap/RedactHelpers.h>
+//#include <pingcap/RedactHelpers.h>
 
 #include <iomanip>
 
@@ -24,7 +24,7 @@ std::atomic<bool> Redact::REDACT_LOG = false;
 
 void Redact::setRedactLog(bool v)
 {
-    pingcap::Redact::setRedactLog(v); // set redact flag for client-c
+    //    pingcap::Redact::setRedactLog(v); // set redact flag for client-c
     Redact::REDACT_LOG.store(v, std::memory_order_relaxed);
 }
 

@@ -14,15 +14,15 @@
 
 #pragma once
 #include <Common/Exception.h>
+#include <Common/crc64.h>
 #include <IO/HashingWriteBuffer.h>
 #include <Poco/Base64Decoder.h>
 #include <Poco/Base64Encoder.h>
-#include <common/crc64.h>
-#ifdef __x86_64__
-#include <xxh_x86dispatch.h>
-#else
-#include <xxh3.h>
-#endif
+//#ifdef __x86_64__
+//#include <xxh_x86dispatch.h>
+//#else
+//#include <xxh3.h>
+//#endif
 #include <zlib.h>
 
 #include <cstddef>
@@ -43,7 +43,7 @@ enum class ChecksumAlgo : uint64_t
     CRC32,
     CRC64,
     City128,
-    XXH3,
+    //    XXH3,
 };
 
 namespace Digest
@@ -109,26 +109,26 @@ private:
     crc64::Digest state{};
 };
 
-class XXH3
-{
-public:
-    using HashType = XXH64_hash_t;
-    static constexpr size_t hash_size = sizeof(HashType);
-    static constexpr auto algorithm = ::DB::ChecksumAlgo::XXH3;
-    void update(const void * src, size_t length)
-    {
-        ProfileEvents::increment(ProfileEvents::ChecksumDigestBytes, length);
-#ifdef __x86_64__ // dispatched version can utilize hardware resource
-        state = XXH3_64bits_withSeed_dispatch(src, length, state);
-#else // use inlined version
-        state = XXH_INLINE_XXH3_64bits_withSeed(src, length, state);
-#endif
-    }
-    [[nodiscard]] HashType checksum() const { return state; }
-
-private:
-    XXH64_hash_t state = 0;
-};
+//class XXH3
+//{
+//public:
+//    using HashType = XXH64_hash_t;
+//    static constexpr size_t hash_size = sizeof(HashType);
+//    static constexpr auto algorithm = ::DB::ChecksumAlgo::XXH3;
+//    void update(const void * src, size_t length)
+//    {
+//        ProfileEvents::increment(ProfileEvents::ChecksumDigestBytes, length);
+//#ifdef __x86_64__ // dispatched version can utilize hardware resource
+//        state = XXH3_64bits_withSeed_dispatch(src, length, state);
+//#else // use inlined version
+//        state = XXH_INLINE_XXH3_64bits_withSeed(src, length, state);
+//#endif
+//    }
+//    [[nodiscard]] HashType checksum() const { return state; }
+//
+//private:
+//    XXH64_hash_t state = 0;
+//};
 } // namespace Digest
 
 template <typename Algorithm>
@@ -148,7 +148,7 @@ BASIC_CHECK_FOR_FRAME(CRC32)
 BASIC_CHECK_FOR_FRAME(CRC64)
 BASIC_CHECK_FOR_FRAME(City128)
 BASIC_CHECK_FOR_FRAME(None)
-BASIC_CHECK_FOR_FRAME(XXH3)
+//BASIC_CHECK_FOR_FRAME(XXH3)
 #undef BASIC_CHECK_FOR_FRAME
 
 using FrameUnion = std::aligned_union_t<
@@ -156,8 +156,7 @@ using FrameUnion = std::aligned_union_t<
     ChecksumFrame<Digest::None>,
     ChecksumFrame<Digest::CRC32>,
     ChecksumFrame<Digest::CRC64>,
-    ChecksumFrame<Digest::City128>,
-    ChecksumFrame<Digest::XXH3>>;
+    ChecksumFrame<Digest::City128>>;
 
 
 struct UnifiedDigestBase

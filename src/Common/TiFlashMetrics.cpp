@@ -18,35 +18,35 @@
 
 namespace DB
 {
-TiFlashMetrics & TiFlashMetrics::instance()
-{
-    static TiFlashMetrics inst; // Instantiated on first use.
-    return inst;
-}
-
-TiFlashMetrics::TiFlashMetrics()
-{
-    registered_profile_events.reserve(ProfileEvents::end());
-    for (ProfileEvents::Event event = 0; event < ProfileEvents::end(); event++)
-    {
-        std::string name{ProfileEvents::getDescription(event)};
-        auto & family
-            = prometheus::BuildGauge().Name(profile_events_prefix + name).Help("System profile event " + name).Register(*registry);
-        registered_profile_events.push_back(&family.Add({}));
-    }
-
-    registered_current_metrics.reserve(CurrentMetrics::end());
-    for (CurrentMetrics::Metric metric = 0; metric < CurrentMetrics::end(); metric++)
-    {
-        std::string name{CurrentMetrics::getDescription(metric)};
-        auto & family
-            = prometheus::BuildGauge().Name(current_metrics_prefix + name).Help("System current metric " + name).Register(*registry);
-        registered_current_metrics.push_back(&family.Add({}));
-    }
-
-    auto prometheus_name = TiFlashMetrics::current_metrics_prefix + std::string("StoreSizeUsed");
-    registered_keypace_store_used_family = &prometheus::BuildGauge().Name(prometheus_name).Help("Store size used of keyspace").Register(*registry);
-    store_used_total_metric = &registered_keypace_store_used_family->Add({{"keyspace_id", ""}, {"type", "all_used"}});
-}
+//TiFlashMetrics & TiFlashMetrics::instance()
+//{
+//    static TiFlashMetrics inst; // Instantiated on first use.
+//    return inst;
+//}
+//
+//TiFlashMetrics::TiFlashMetrics()
+//{
+//    registered_profile_events.reserve(ProfileEvents::end());
+//    for (ProfileEvents::Event event = 0; event < ProfileEvents::end(); event++)
+//    {
+//        std::string name{ProfileEvents::getDescription(event)};
+//        auto & family
+//            = prometheus::BuildGauge().Name(profile_events_prefix + name).Help("System profile event " + name).Register(*registry);
+//        registered_profile_events.push_back(&family.Add({}));
+//    }
+//
+//    registered_current_metrics.reserve(CurrentMetrics::end());
+//    for (CurrentMetrics::Metric metric = 0; metric < CurrentMetrics::end(); metric++)
+//    {
+//        std::string name{CurrentMetrics::getDescription(metric)};
+//        auto & family
+//            = prometheus::BuildGauge().Name(current_metrics_prefix + name).Help("System current metric " + name).Register(*registry);
+//        registered_current_metrics.push_back(&family.Add({}));
+//    }
+//
+//    auto prometheus_name = TiFlashMetrics::current_metrics_prefix + std::string("StoreSizeUsed");
+//    registered_keypace_store_used_family = &prometheus::BuildGauge().Name(prometheus_name).Help("Store size used of keyspace").Register(*registry);
+//    store_used_total_metric = &registered_keypace_store_used_family->Add({{"keyspace_id", ""}, {"type", "all_used"}});
+//}
 
 } // namespace DB

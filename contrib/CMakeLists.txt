@@ -4,6 +4,7 @@ if (NOT MSVC)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-old-style-cast")
 endif ()
 
+add_subdirectory (libfiu)
 add_subdirectory (boost-cmake)
 add_subdirectory (lz4-cmake)
 

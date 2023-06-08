@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <Common/Settings.h>
 #include <IO/CompressedStream.h>
 
 

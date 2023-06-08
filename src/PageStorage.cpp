@@ -12,28 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <Interpreters/Context.h>
+//#include <Interpreters/Context.h>
 #include <PageStorage.h>
-#include <V2/PageStorage.h>
+//#include <V2/PageStorage.h>
 #include <V3/PageStorageImpl.h>
 #include <V3/Universal/UniversalPageStorage.h>
 #include <WriteBatchWrapperImpl.h>
 
 namespace DB
 {
+namespace ErrorCodes
+{
+extern const int NOT_IMPLEMENTED;
+}
+
 PageStoragePtr PageStorage::create(
     String name,
     PSDiskDelegatorPtr delegator,
     const PageStorageConfig & config,
     const FileProviderPtr & file_provider,
-    Context & global_ctx,
-    bool use_v3,
-    bool no_more_insert_to_v2)
+    Context & global_ctx)
 {
-    if (use_v3)
-        return std::make_shared<PS::V3::PageStorageImpl>(name, delegator, config, file_provider);
-    else
-        return std::make_shared<PS::V2::PageStorage>(name, delegator, config, file_provider, global_ctx.getPSBackgroundPool(), no_more_insert_to_v2);
+    return std::make_shared<PS::V3::PageStorageImpl>(name, delegator, config, file_provider);
 }
 
 /***************************

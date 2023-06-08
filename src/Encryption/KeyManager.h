@@ -23,7 +23,9 @@
 namespace DB
 {
 enum class EncryptionMethod : uint8_t;
-struct FileEncryptionInfo;
+struct FileEncryptionInfo
+{
+};
 
 size_t keySize(EncryptionMethod method);
 

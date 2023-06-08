@@ -14,20 +14,20 @@
 
 #pragma once
 
-#include <Common/Decimal.h>
+//#include <Common/Decimal.h>
 #include <Common/Exception.h>
-#include <Common/MyTime.h>
+//#include <Common/MyTime.h>
 #include <Common/StringUtils/StringUtils.h>
 #include <Core/Types.h>
-#include <Core/UUID.h>
+//#include <Core/UUID.h>
 #include <IO/DoubleConverter.h>
 #include <IO/VarInt.h>
 #include <IO/WriteBuffer.h>
 #include <IO/WriteBufferFromString.h>
 #include <IO/WriteIntText.h>
-#include <Common/DateLUT.h>
-#include <Common/LocalDate.h>
-#include <Common/LocalDateTime.h>
+//#include <Common/DateLUT.h>
+//#include <Common/LocalDate.h>
+//#include <Common/LocalDateTime.h>
 #include <Common/StringRef.h>
 #include <Common/find_symbols.h>
 
@@ -491,176 +491,176 @@ void formatHex(IteratorSrc src, IteratorDst dst, const size_t num_bytes);
 void formatUUID(const UInt8 * src16, UInt8 * dst36);
 void formatUUID(std::reverse_iterator<const UInt8 *> dst16, UInt8 * dst36);
 
-inline void writeUUIDText(const UUID & uuid, WriteBuffer & buf)
-{
-    char s[36];
-
-    formatUUID(std::reverse_iterator<const UInt8 *>(reinterpret_cast<const UInt8 *>(&uuid) + 16), reinterpret_cast<UInt8 *>(s));
-    buf.write(s, sizeof(s));
-}
-
-inline void writeMyDateText(UInt64 date, WriteBuffer & buf)
-{
-    const String & tmp = MyDate(date).toString();
-    buf.write(tmp.c_str(), tmp.size());
-}
-
-/// in YYYY-MM-DD format
-template <char delimiter = '-'>
-inline void writeDateText(const LocalDate & date, WriteBuffer & buf)
-{
-    static const char digits[201] = "00010203040506070809"
-                                    "10111213141516171819"
-                                    "20212223242526272829"
-                                    "30313233343536373839"
-                                    "40414243444546474849"
-                                    "50515253545556575859"
-                                    "60616263646566676869"
-                                    "70717273747576777879"
-                                    "80818283848586878889"
-                                    "90919293949596979899";
-
-    if (buf.position() + 10 <= buf.buffer().end())
-    {
-        memcpy(buf.position(), &digits[date.year() / 100 * 2], 2);
-        buf.position() += 2;
-        memcpy(buf.position(), &digits[date.year() % 100 * 2], 2);
-        buf.position() += 2;
-        *buf.position() = delimiter;
-        ++buf.position();
-        memcpy(buf.position(), &digits[date.month() * 2], 2);
-        buf.position() += 2;
-        *buf.position() = delimiter;
-        ++buf.position();
-        memcpy(buf.position(), &digits[date.day() * 2], 2);
-        buf.position() += 2;
-    }
-    else
-    {
-        buf.write(&digits[date.year() / 100 * 2], 2);
-        buf.write(&digits[date.year() % 100 * 2], 2);
-        buf.write(delimiter);
-        buf.write(&digits[date.month() * 2], 2);
-        buf.write(delimiter);
-        buf.write(&digits[date.day() * 2], 2);
-    }
-}
-
-template <char delimiter = '-'>
-inline void writeDateText(DayNum date, WriteBuffer & buf)
-{
-    if (unlikely(!date))
-    {
-        static const char s[] = {'0', '0', '0', '0', delimiter, '0', '0', delimiter, '0', '0'};
-        buf.write(s, sizeof(s));
-        return;
-    }
-
-    writeDateText<delimiter>(LocalDate(date), buf);
-}
-
-
-template <typename T>
-void writeText(const Decimal<T> & v, ScaleType scale, WriteBuffer & ostr)
-{
-    const std::string & str = v.toString(scale);
-    ostr.write(str.c_str(), str.length());
-}
-
-/// In the format YYYY-MM-DD HH:MM:SS
-template <char date_delimeter = '-', char time_delimeter = ':', char between_date_time_delimiter = ' '>
-inline void writeDateTimeText(const LocalDateTime & datetime, WriteBuffer & buf)
-{
-    static const char digits[201] = "00010203040506070809"
-                                    "10111213141516171819"
-                                    "20212223242526272829"
-                                    "30313233343536373839"
-                                    "40414243444546474849"
-                                    "50515253545556575859"
-                                    "60616263646566676869"
-                                    "70717273747576777879"
-                                    "80818283848586878889"
-                                    "90919293949596979899";
-
-    if (buf.position() + 19 <= buf.buffer().end())
-    {
-        memcpy(buf.position(), &digits[datetime.year() / 100 * 2], 2);
-        buf.position() += 2;
-        memcpy(buf.position(), &digits[datetime.year() % 100 * 2], 2);
-        buf.position() += 2;
-        *buf.position() = date_delimeter;
-        ++buf.position();
-        memcpy(buf.position(), &digits[datetime.month() * 2], 2);
-        buf.position() += 2;
-        *buf.position() = date_delimeter;
-        ++buf.position();
-        memcpy(buf.position(), &digits[datetime.day() * 2], 2);
-        buf.position() += 2;
-        *buf.position() = between_date_time_delimiter;
-        ++buf.position();
-        memcpy(buf.position(), &digits[datetime.hour() * 2], 2);
-        buf.position() += 2;
-        *buf.position() = time_delimeter;
-        ++buf.position();
-        memcpy(buf.position(), &digits[datetime.minute() * 2], 2);
-        buf.position() += 2;
-        *buf.position() = time_delimeter;
-        ++buf.position();
-        memcpy(buf.position(), &digits[datetime.second() * 2], 2);
-        buf.position() += 2;
-    }
-    else
-    {
-        buf.write(&digits[datetime.year() / 100 * 2], 2);
-        buf.write(&digits[datetime.year() % 100 * 2], 2);
-        buf.write(date_delimeter);
-        buf.write(&digits[datetime.month() * 2], 2);
-        buf.write(date_delimeter);
-        buf.write(&digits[datetime.day() * 2], 2);
-        buf.write(between_date_time_delimiter);
-        buf.write(&digits[datetime.hour() * 2], 2);
-        buf.write(time_delimeter);
-        buf.write(&digits[datetime.minute() * 2], 2);
-        buf.write(time_delimeter);
-        buf.write(&digits[datetime.second() * 2], 2);
-    }
-}
-
-inline void writeMyDateTimeTextWithFormat(UInt64 packed, WriteBuffer & buf, MyDateTimeFormatter & formatter, String & result)
-{
-    result.clear();
-    formatter.format(MyDateTime(packed), result);
-    buf.write(result.c_str(), result.size());
-}
-
-inline void writeMyDateTimeText(UInt64 packed, int fsp, WriteBuffer & buf)
-{
-    const String & str = MyDateTime(packed).toString(fsp);
-    buf.write(str.c_str(), str.size());
-}
-
-/// In the format YYYY-MM-DD HH:MM:SS, according to the specified time zone.
-template <char date_delimeter = '-', char time_delimeter = ':', char between_date_time_delimiter = ' '>
-inline void writeDateTimeText(time_t datetime, WriteBuffer & buf, const DateLUTImpl & date_lut = DateLUT::instance())
-{
-    if (unlikely(!datetime))
-    {
-        // clang-format off
-        static const char s[] = {
-            '0', '0', '0', '0', date_delimeter, '0', '0', date_delimeter, '0', '0',
-            between_date_time_delimiter,
-            '0', '0', time_delimeter, '0', '0', time_delimeter, '0', '0'
-        };
-        // clang-format on
-        buf.write(s, sizeof(s));
-        return;
-    }
-
-    const auto & values = date_lut.getValues(datetime);
-    writeDateTimeText<date_delimeter, time_delimeter, between_date_time_delimiter>(
-        LocalDateTime(values.year, values.month, values.day_of_month, date_lut.toHour(datetime), date_lut.toMinute(datetime), date_lut.toSecond(datetime)),
-        buf);
-}
+//inline void writeUUIDText(const UUID & uuid, WriteBuffer & buf)
+//{
+//    char s[36];
+//
+//    formatUUID(std::reverse_iterator<const UInt8 *>(reinterpret_cast<const UInt8 *>(&uuid) + 16), reinterpret_cast<UInt8 *>(s));
+//    buf.write(s, sizeof(s));
+//}
+//
+//inline void writeMyDateText(UInt64 date, WriteBuffer & buf)
+//{
+//    const String & tmp = MyDate(date).toString();
+//    buf.write(tmp.c_str(), tmp.size());
+//}
+//
+///// in YYYY-MM-DD format
+//template <char delimiter = '-'>
+//inline void writeDateText(const LocalDate & date, WriteBuffer & buf)
+//{
+//    static const char digits[201] = "00010203040506070809"
+//                                    "10111213141516171819"
+//                                    "20212223242526272829"
+//                                    "30313233343536373839"
+//                                    "40414243444546474849"
+//                                    "50515253545556575859"
+//                                    "60616263646566676869"
+//                                    "70717273747576777879"
+//                                    "80818283848586878889"
+//                                    "90919293949596979899";
+//
+//    if (buf.position() + 10 <= buf.buffer().end())
+//    {
+//        memcpy(buf.position(), &digits[date.year() / 100 * 2], 2);
+//        buf.position() += 2;
+//        memcpy(buf.position(), &digits[date.year() % 100 * 2], 2);
+//        buf.position() += 2;
+//        *buf.position() = delimiter;
+//        ++buf.position();
+//        memcpy(buf.position(), &digits[date.month() * 2], 2);
+//        buf.position() += 2;
+//        *buf.position() = delimiter;
+//        ++buf.position();
+//        memcpy(buf.position(), &digits[date.day() * 2], 2);
+//        buf.position() += 2;
+//    }
+//    else
+//    {
+//        buf.write(&digits[date.year() / 100 * 2], 2);
+//        buf.write(&digits[date.year() % 100 * 2], 2);
+//        buf.write(delimiter);
+//        buf.write(&digits[date.month() * 2], 2);
+//        buf.write(delimiter);
+//        buf.write(&digits[date.day() * 2], 2);
+//    }
+//}
+//
+//template <char delimiter = '-'>
+//inline void writeDateText(DayNum date, WriteBuffer & buf)
+//{
+//    if (unlikely(!date))
+//    {
+//        static const char s[] = {'0', '0', '0', '0', delimiter, '0', '0', delimiter, '0', '0'};
+//        buf.write(s, sizeof(s));
+//        return;
+//    }
+//
+//    writeDateText<delimiter>(LocalDate(date), buf);
+//}
+//
+//
+//template <typename T>
+//void writeText(const Decimal<T> & v, ScaleType scale, WriteBuffer & ostr)
+//{
+//    const std::string & str = v.toString(scale);
+//    ostr.write(str.c_str(), str.length());
+//}
+//
+///// In the format YYYY-MM-DD HH:MM:SS
+//template <char date_delimeter = '-', char time_delimeter = ':', char between_date_time_delimiter = ' '>
+//inline void writeDateTimeText(const LocalDateTime & datetime, WriteBuffer & buf)
+//{
+//    static const char digits[201] = "00010203040506070809"
+//                                    "10111213141516171819"
+//                                    "20212223242526272829"
+//                                    "30313233343536373839"
+//                                    "40414243444546474849"
+//                                    "50515253545556575859"
+//                                    "60616263646566676869"
+//                                    "70717273747576777879"
+//                                    "80818283848586878889"
+//                                    "90919293949596979899";
+//
+//    if (buf.position() + 19 <= buf.buffer().end())
+//    {
+//        memcpy(buf.position(), &digits[datetime.year() / 100 * 2], 2);
+//        buf.position() += 2;
+//        memcpy(buf.position(), &digits[datetime.year() % 100 * 2], 2);
+//        buf.position() += 2;
+//        *buf.position() = date_delimeter;
+//        ++buf.position();
+//        memcpy(buf.position(), &digits[datetime.month() * 2], 2);
+//        buf.position() += 2;
+//        *buf.position() = date_delimeter;
+//        ++buf.position();
+//        memcpy(buf.position(), &digits[datetime.day() * 2], 2);
+//        buf.position() += 2;
+//        *buf.position() = between_date_time_delimiter;
+//        ++buf.position();
+//        memcpy(buf.position(), &digits[datetime.hour() * 2], 2);
+//        buf.position() += 2;
+//        *buf.position() = time_delimeter;
+//        ++buf.position();
+//        memcpy(buf.position(), &digits[datetime.minute() * 2], 2);
+//        buf.position() += 2;
+//        *buf.position() = time_delimeter;
+//        ++buf.position();
+//        memcpy(buf.position(), &digits[datetime.second() * 2], 2);
+//        buf.position() += 2;
+//    }
+//    else
+//    {
+//        buf.write(&digits[datetime.year() / 100 * 2], 2);
+//        buf.write(&digits[datetime.year() % 100 * 2], 2);
+//        buf.write(date_delimeter);
+//        buf.write(&digits[datetime.month() * 2], 2);
+//        buf.write(date_delimeter);
+//        buf.write(&digits[datetime.day() * 2], 2);
+//        buf.write(between_date_time_delimiter);
+//        buf.write(&digits[datetime.hour() * 2], 2);
+//        buf.write(time_delimeter);
+//        buf.write(&digits[datetime.minute() * 2], 2);
+//        buf.write(time_delimeter);
+//        buf.write(&digits[datetime.second() * 2], 2);
+//    }
+//}
+//
+//inline void writeMyDateTimeTextWithFormat(UInt64 packed, WriteBuffer & buf, MyDateTimeFormatter & formatter, String & result)
+//{
+//    result.clear();
+//    formatter.format(MyDateTime(packed), result);
+//    buf.write(result.c_str(), result.size());
+//}
+//
+//inline void writeMyDateTimeText(UInt64 packed, int fsp, WriteBuffer & buf)
+//{
+//    const String & str = MyDateTime(packed).toString(fsp);
+//    buf.write(str.c_str(), str.size());
+//}
+//
+///// In the format YYYY-MM-DD HH:MM:SS, according to the specified time zone.
+//template <char date_delimeter = '-', char time_delimeter = ':', char between_date_time_delimiter = ' '>
+//inline void writeDateTimeText(time_t datetime, WriteBuffer & buf, const DateLUTImpl & date_lut = DateLUT::instance())
+//{
+//    if (unlikely(!datetime))
+//    {
+//        // clang-format off
+//        static const char s[] = {
+//            '0', '0', '0', '0', date_delimeter, '0', '0', date_delimeter, '0', '0',
+//            between_date_time_delimiter,
+//            '0', '0', time_delimeter, '0', '0', time_delimeter, '0', '0'
+//        };
+//        // clang-format on
+//        buf.write(s, sizeof(s));
+//        return;
+//    }
+//
+//    const auto & values = date_lut.getValues(datetime);
+//    writeDateTimeText<date_delimeter, time_delimeter, between_date_time_delimiter>(
+//        LocalDateTime(values.year, values.month, values.day_of_month, date_lut.toHour(datetime), date_lut.toMinute(datetime), date_lut.toSecond(datetime)),
+//        buf);
+//}
 
 
 /// Methods for output in binary format.
@@ -687,19 +687,19 @@ inline void writeBinary(const UInt256 & x, WriteBuffer & buf)
 {
     writePODBinary(x, buf);
 }
-inline void writeBinary(const LocalDate & x, WriteBuffer & buf)
-{
-    writePODBinary(x, buf);
-}
-inline void writeBinary(const LocalDateTime & x, WriteBuffer & buf)
-{
-    writePODBinary(x, buf);
-}
-template <typename T>
-inline void writeBinary(const Decimal<T> & x, WriteBuffer & buf)
-{
-    writePODBinary(x, buf);
-}
+//inline void writeBinary(const LocalDate & x, WriteBuffer & buf)
+//{
+//    writePODBinary(x, buf);
+//}
+//inline void writeBinary(const LocalDateTime & x, WriteBuffer & buf)
+//{
+//    writePODBinary(x, buf);
+//}
+//template <typename T>
+//inline void writeBinary(const Decimal<T> & x, WriteBuffer & buf)
+//{
+//    writePODBinary(x, buf);
+//}
 
 
 /// Methods for outputting the value in text form for a tab-separated format.
@@ -739,19 +739,19 @@ inline void writeText(const char * x, size_t size, WriteBuffer & buf)
 {
     writeEscapedString(x, size, buf);
 }
-
-inline void writeText(const LocalDate & x, WriteBuffer & buf)
-{
-    writeDateText(x, buf);
-}
-inline void writeText(const LocalDateTime & x, WriteBuffer & buf)
-{
-    writeDateTimeText(x, buf);
-}
-inline void writeText(const UUID & x, WriteBuffer & buf)
-{
-    writeUUIDText(x, buf);
-}
+//
+//inline void writeText(const LocalDate & x, WriteBuffer & buf)
+//{
+//    writeDateText(x, buf);
+//}
+//inline void writeText(const LocalDateTime & x, WriteBuffer & buf)
+//{
+//    writeDateTimeText(x, buf);
+//}
+//inline void writeText(const UUID & x, WriteBuffer & buf)
+//{
+//    writeUUIDText(x, buf);
+//}
 inline void writeText(const UInt128 &, WriteBuffer &)
 {
     /** Because UInt128 isn't a natural type, without arithmetic operator and only use as an intermediary type -for UUID-
@@ -772,20 +772,20 @@ inline void writeQuoted(const String & x, WriteBuffer & buf)
 {
     writeQuotedString(x, buf);
 }
-
-inline void writeQuoted(const LocalDate & x, WriteBuffer & buf)
-{
-    writeChar('\'', buf);
-    writeDateText(x, buf);
-    writeChar('\'', buf);
-}
-
-inline void writeQuoted(const LocalDateTime & x, WriteBuffer & buf)
-{
-    writeChar('\'', buf);
-    writeDateTimeText(x, buf);
-    writeChar('\'', buf);
-}
+//
+//inline void writeQuoted(const LocalDate & x, WriteBuffer & buf)
+//{
+//    writeChar('\'', buf);
+//    writeDateText(x, buf);
+//    writeChar('\'', buf);
+//}
+//
+//inline void writeQuoted(const LocalDateTime & x, WriteBuffer & buf)
+//{
+//    writeChar('\'', buf);
+//    writeDateTimeText(x, buf);
+//    writeChar('\'', buf);
+//}
 
 
 /// String, date, datetime are in double quotes with C-style escaping. Numbers - without.
@@ -800,27 +800,27 @@ inline void writeDoubleQuoted(const String & x, WriteBuffer & buf)
 {
     writeDoubleQuotedString(x, buf);
 }
-
-inline void writeDoubleQuoted(const LocalDate & x, WriteBuffer & buf)
-{
-    writeChar('"', buf);
-    writeDateText(x, buf);
-    writeChar('"', buf);
-}
-
-inline void writeDoubleQuoted(const LocalDateTime & x, WriteBuffer & buf)
-{
-    writeChar('"', buf);
-    writeDateTimeText(x, buf);
-    writeChar('"', buf);
-}
-
-inline void writeDoubleQuoted(const UUID & x, WriteBuffer & buf)
-{
-    writeChar('"', buf);
-    writeText(x, buf);
-    writeChar('"', buf);
-}
+//
+//inline void writeDoubleQuoted(const LocalDate & x, WriteBuffer & buf)
+//{
+//    writeChar('"', buf);
+//    writeDateText(x, buf);
+//    writeChar('"', buf);
+//}
+//
+//inline void writeDoubleQuoted(const LocalDateTime & x, WriteBuffer & buf)
+//{
+//    writeChar('"', buf);
+//    writeDateTimeText(x, buf);
+//    writeChar('"', buf);
+//}
+//
+//inline void writeDoubleQuoted(const UUID & x, WriteBuffer & buf)
+//{
+//    writeChar('"', buf);
+//    writeText(x, buf);
+//    writeChar('"', buf);
+//}
 
 
 /// String - in double quotes and with CSV-escaping; date, datetime - in double quotes. Numbers - without.
@@ -835,18 +835,18 @@ inline void writeCSV(const String & x, WriteBuffer & buf)
 {
     writeCSVString<>(x, buf);
 }
-inline void writeCSV(const LocalDate & x, WriteBuffer & buf)
-{
-    writeDoubleQuoted(x, buf);
-}
-inline void writeCSV(const LocalDateTime & x, WriteBuffer & buf)
-{
-    writeDoubleQuoted(x, buf);
-}
-inline void writeCSV(const UUID & x, WriteBuffer & buf)
-{
-    writeDoubleQuoted(x, buf);
-}
+//inline void writeCSV(const LocalDate & x, WriteBuffer & buf)
+//{
+//    writeDoubleQuoted(x, buf);
+//}
+//inline void writeCSV(const LocalDateTime & x, WriteBuffer & buf)
+//{
+//    writeDoubleQuoted(x, buf);
+//}
+//inline void writeCSV(const UUID & x, WriteBuffer & buf)
+//{
+//    writeDoubleQuoted(x, buf);
+//}
 inline void writeCSV(const UInt128, WriteBuffer &)
 {
     /** Because UInt128 isn't a natural type, without arithmetic operator and only use as an intermediary type -for UUID-

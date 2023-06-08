@@ -15,7 +15,7 @@
 #pragma once
 
 #include <Common/Logger.h>
-#include <Storages/DeltaMerge/Remote/DataStore/DataStore_fwd.h>
+//#include <Storages/DeltaMerge/Remote/DataStore/DataStore_fwd.h>
 #include <Common/types.h>
 #include <fmt/format.h>
 
@@ -77,11 +77,11 @@ private:
     CacheMap stats;
 };
 
-std::unordered_set<String> getRemoteFileIdsNeedCompact(
-    PS::V3::CPDataFilesStatCache::CacheMap & stats,
-    const DB::DM::Remote::RemoteGCThreshold & gc_threshold,
-    const DB::DM::Remote::IDataStorePtr & remote_store,
-    const LoggerPtr & log);
+//std::unordered_set<String> getRemoteFileIdsNeedCompact(
+//    PS::V3::CPDataFilesStatCache::CacheMap & stats,
+//    const DB::DM::Remote::RemoteGCThreshold & gc_threshold,
+//    const DB::DM::Remote::IDataStorePtr & remote_store,
+//    const LoggerPtr & log);
 
 } // namespace DB::PS::V3
 

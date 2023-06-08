@@ -12,6 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if (APPLE)
+    if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin" AND NOT "${CMAKE_SYSTEM_VERSION}" VERSION_LESS "16.0.0")
+        set (APPLE_SIERRA_OR_NEWER 1)
+    else ()
+        set (APPLE_SIERRA_OR_NEWER 0)
+    endif ()
+endif ()
+
+set (CONFIG_COMMON ${CMAKE_CURRENT_BINARY_DIR}/Common/config_common.h)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/Common/config_common.h.in ${CONFIG_COMMON})
+message(STATUS "config common path: ${CONFIG_COMMON}")
 
 add_subdirectory (./V3/CheckpointFile/Proto)
 
@@ -31,15 +42,18 @@ add_headers_and_sources(page ./V3/CheckpointFile)
 add_headers_and_sources(page ./V3/CheckpointFile/Proto)
 add_headers_and_sources(page ./V3/WAL)
 
-add_library(page_house ${page_headers} ${page_sources})
+add_library(page_house ${CONFIG_COMMON} ${page_headers} ${page_sources})
+target_include_directories(page_house PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/)
 target_link_libraries (page_house
     PUBLIC
-    libsymbolization
+    #libsymbolization
+    fiu
     cityhash
     magic_enum
     ${LZ4_LIBRARY}
     ${Poco_Data_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
+    page_storage_v3
 )
 
 add_subdirectory(workload)
