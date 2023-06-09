@@ -42,7 +42,7 @@ public:
      * Whether this page entry's data is stored in a checkpoint and where it is stored.
      * If this page entry is not stored in a checkpoint file, this field.is_valid == false.
      */
-    OptionalCheckpointInfo checkpoint_info;
+    //    OptionalCheckpointInfo checkpoint_info;
 
     // The offset to the beginning of specify field.
     PageFieldOffsetChecksums field_offsets{};
@@ -55,7 +55,7 @@ public:
 
     inline bool isValid() const
     {
-        return file_id != INVALID_BLOBFILE_ID || checkpoint_info.has_value();
+        return file_id != INVALID_BLOBFILE_ID;
     }
 
     size_t getFieldSize(size_t index) const
@@ -68,15 +68,15 @@ public:
                             ErrorCodes::LOGICAL_ERROR);
         else if (index == field_offsets.size() - 1)
         {
-            if (checkpoint_info.has_value() && checkpoint_info.is_local_data_reclaimed)
-            {
-                // entry.size is not reliable under this case, use the size_in_file in checkpoint_info instead
-                return checkpoint_info.data_location.size_in_file - field_offsets.back().first;
-            }
-            else
-            {
-                return size - field_offsets.back().first;
-            }
+            //            if (checkpoint_info.has_value() && checkpoint_info.is_local_data_reclaimed)
+            //            {
+            //                // entry.size is not reliable under this case, use the size_in_file in checkpoint_info instead
+            //                return checkpoint_info.data_location.size_in_file - field_offsets.back().first;
+            //            }
+            //            else
+            //            {
+            return size - field_offsets.back().first;
+            //            }
         }
         else
             return field_offsets[index + 1].first - field_offsets[index].first;
@@ -91,15 +91,15 @@ public:
                 ErrorCodes::LOGICAL_ERROR);
         else if (index == field_offsets.size() - 1)
         {
-            if (checkpoint_info.has_value() && checkpoint_info.is_local_data_reclaimed)
-            {
-                // entry.size is not reliable under this case, use the size_in_file in checkpoint_info instead
-                return {field_offsets.back().first, checkpoint_info.data_location.size_in_file};
-            }
-            else
-            {
-                return {field_offsets.back().first, size};
-            }
+            //            if (checkpoint_info.has_value() && checkpoint_info.is_local_data_reclaimed)
+            //            {
+            //                // entry.size is not reliable under this case, use the size_in_file in checkpoint_info instead
+            //                return {field_offsets.back().first, checkpoint_info.data_location.size_in_file};
+            //            }
+            //            else
+            //            {
+            return {field_offsets.back().first, size};
+            //            }
         }
         else
             return {field_offsets[index].first, field_offsets[index + 1].first};
@@ -134,6 +134,6 @@ struct fmt::formatter<DB::PS::V3::PageEntryV3>
             },
             ",");
 
-        return format_to(ctx.out(), "PageEntry{{file: {}, offset: 0x{:X}, size: {}, checksum: 0x{:X}, tag: {}, field_offsets: [{}], checkpoint_info: {}}}", entry.file_id, entry.offset, entry.size, entry.checksum, entry.tag, fmt_buf.toString(), entry.checkpoint_info.toDebugString());
+        return format_to(ctx.out(), "PageEntry{{file: {}, offset: 0x{:X}, size: {}, checksum: 0x{:X}, tag: {}, field_offsets: [{}], checkpoint_info: {}}}", entry.file_id, entry.offset, entry.size, entry.checksum, entry.tag, fmt_buf.toString(), "");
     }
 };

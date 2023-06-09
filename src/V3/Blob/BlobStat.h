@@ -15,11 +15,11 @@
 #pragma once
 
 #include <Common/Logger.h>
+#include <Common/types.h>
+#include <PathPool.h>
 #include <V3/Blob/BlobConfig.h>
 #include <V3/PageEntry.h>
 #include <V3/spacemap/SpaceMap.h>
-#include <Storages/PathPool.h>
-#include <Common/types.h>
 
 namespace DB::PS::V3
 {

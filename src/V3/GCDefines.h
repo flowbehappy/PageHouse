@@ -15,10 +15,10 @@
 #pragma once
 
 #include <Common/Stopwatch.h>
-#include <Poco/Message.h>
 #include <ExternalPageCallbacks.h>
+#include <Poco/Message.h>
 #include <V3/BlobStore.h>
-#include <V3/CheckpointFile/CPDataFileStat.h>
+//#include <V3/CheckpointFile/CPDataFileStat.h>
 #include <V3/PageDefines.h>
 #include <V3/PageDirectory.h>
 #include <V3/Universal/UniversalPageId.h>
@@ -91,7 +91,7 @@ public:
         typename Trait::PageDirectory & page_directory,
         const WriteLimiterPtr & write_limiter,
         const ReadLimiterPtr & read_limiter,
-        RemoteFileValidSizes * remote_valid_sizes,
+        //        RemoteFileValidSizes * remote_valid_sizes,
         LoggerPtr log);
 
 private:
@@ -101,8 +101,7 @@ private:
         typename Trait::BlobStore & blob_store,
         typename Trait::PageDirectory & page_directory,
         const WriteLimiterPtr & write_limiter,
-        const ReadLimiterPtr & read_limiter,
-        RemoteFileValidSizes * remote_valid_sizes);
+        const ReadLimiterPtr & read_limiter);
 
 private:
     std::atomic<bool> gc_is_running = false;

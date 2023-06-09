@@ -71,21 +71,22 @@ public:
         return buff.releaseStr();
     }
 
-//    static inline String toFullPrefix(KeyspaceID keyspace_id, StorageType type, NamespaceID ns_id)
-//    {
-//        WriteBufferFromOwnString buff;
-//        if (type != StorageType::KVStore)
-//        {
-//            writeString(TiKVKeyspaceID::makeKeyspacePrefix(keyspace_id), buff);
-//        }
-//        writeString(getSubPrefix(type), buff);
-//        if (type != StorageType::KVStore)
-//        {
-//            UniversalPageIdFormat::encodeUInt64(ns_id, buff);
-//        }
-//
-//        return buff.releaseStr();
-//    }
+    static inline String toFullPrefix(KeyspaceID keyspace_id, StorageType type, NamespaceID ns_id)
+    {
+        throw Exception("Unsupported");
+        //            WriteBufferFromOwnString buff;
+        //            if (type != StorageType::KVStore)
+        //            {
+        //                writeString(TiKVKeyspaceID::makeKeyspacePrefix(keyspace_id), buff);
+        //            }
+        //            writeString(getSubPrefix(type), buff);
+        //            if (type != StorageType::KVStore)
+        //            {
+        //                UniversalPageIdFormat::encodeUInt64(ns_id, buff);
+        //            }
+        //
+        //            return buff.releaseStr();
+    }
 
     static UniversalPageId toKVStoreKey(UInt64 region_id)
     {
@@ -172,10 +173,10 @@ public:
             return INVALID_PAGE_U64_ID;
     }
 
-    static inline KeyspaceID getKeyspaceID(const UniversalPageId & page_id)
-    {
-        return TiKVKeyspaceID::getKeyspaceID(std::string_view(page_id.data(), page_id.size()));
-    }
+    //    static inline KeyspaceID getKeyspaceID(const UniversalPageId & page_id)
+    //    {
+    //        return TiKVKeyspaceID::getKeyspaceID(std::string_view(page_id.data(), page_id.size()));
+    //    }
 
     static inline String getFullPrefix(const UniversalPageId & page_id)
     {
@@ -183,12 +184,12 @@ public:
         return page_id.substr(0, prefix_length).toStr();
     }
 
-    static inline bool isType(const UniversalPageId & page_id, StorageType type)
-    {
-        const auto & page_id_str = page_id.asStr();
-        auto page_id_without_keyspace = TiKVKeyspaceID::removeKeyspaceID(std::string_view(page_id_str.data(), page_id_str.size()));
-        return page_id_without_keyspace.starts_with(getSubPrefix(type));
-    }
+    //    static inline bool isType(const UniversalPageId & page_id, StorageType type)
+    //    {
+    //        const auto & page_id_str = page_id.asStr();
+    //        auto page_id_without_keyspace = TiKVKeyspaceID::removeKeyspaceID(std::string_view(page_id_str.data(), page_id_str.size()));
+    //        return page_id_without_keyspace.starts_with(getSubPrefix(type));
+    //    }
 
 private:
     static inline void encodeUInt64(const UInt64 x, WriteBuffer & ss)

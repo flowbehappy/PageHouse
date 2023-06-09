@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
+#include <Common/ThreadNumber.h>
+#include <atomic>
 
-#include <IO/ReadBuffer.h>
-#include <IO/WriteBuffer.h>
-#include <google/protobuf/message.h>
+static thread_local unsigned thread_number = 0;
+static std::atomic_uint threads{0};
 
-namespace DB::PS::V3::details
+unsigned Poco::ThreadNumber::get()
 {
+    if (thread_number == 0)
+        thread_number = ++threads;
 
-void readMessageWithLength(ReadBuffer & reader, google::protobuf::MessageLite & msg_out);
-
-void writeMessageWithLength(WriteBuffer & writer, const google::protobuf::MessageLite & msg);
-
-} // namespace DB::PS::V3::details
+    return thread_number;
+}

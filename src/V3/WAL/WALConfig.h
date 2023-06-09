@@ -15,7 +15,6 @@
 #pragma once
 
 #include <Common/Exception.h>
-#include <Interpreters/SettingsCommon.h>
 #include <Config.h>
 #include <V3/PageDefines.h>
 #include <WALRecoveryMode.h>
@@ -24,11 +23,11 @@ namespace DB::PS::V3
 {
 struct WALConfig
 {
-    SettingUInt64 roll_size = PAGE_META_ROLL_SIZE;
-    SettingUInt64 max_persisted_log_files = MAX_PERSISTED_LOG_FILES;
+    UInt64 roll_size = PAGE_META_ROLL_SIZE;
+    UInt64 max_persisted_log_files = MAX_PERSISTED_LOG_FILES;
 
 private:
-    SettingUInt64 wal_recover_mode = 0;
+    UInt64 wal_recover_mode = 0;
 
 public:
     void setRecoverMode(UInt64 recover_mode)
@@ -44,7 +43,7 @@ public:
 
     WALRecoveryMode getRecoverMode() const
     {
-        return static_cast<WALRecoveryMode>(wal_recover_mode.get());
+        return static_cast<WALRecoveryMode>(wal_recover_mode);
     }
 
     static WALConfig from(const PageStorageConfig & config)

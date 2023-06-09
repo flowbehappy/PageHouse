@@ -13,10 +13,10 @@
 // limitations under the License.
 
 #include <Common/ProfileEvents.h>
+#include <Common/string_split.h>
+#include <PathPool.h>
 #include <V3/Blob/BlobFile.h>
 #include <V3/Blob/BlobStat.h>
-#include <Storages/PathPool.h>
-#include <boost_wrapper/string_split.h>
 
 #include <boost/algorithm/string/classification.hpp>
 
@@ -52,7 +52,7 @@ void BlobStats::restoreByEntry(const PageEntryV3 & entry)
     else
     {
         // It must be an entry point to remote data location
-        RUNTIME_CHECK(entry.checkpoint_info.is_valid && entry.checkpoint_info.is_local_data_reclaimed);
+        //        RUNTIME_CHECK(entry.checkpoint_info.is_valid && entry.checkpoint_info.is_local_data_reclaimed);
     }
 }
 
@@ -155,7 +155,7 @@ BlobStats::BlobStatPtr BlobStats::createStatNotChecking(BlobFileId blob_file_id,
     auto stat_type = max_caps <= config.file_limit_size ? BlobStats::BlobStatType::NORMAL : BlobStats::BlobStatType::READ_ONLY;
     BlobStatPtr stat = std::make_shared<BlobStat>(
         blob_file_id,
-        static_cast<SpaceMap::SpaceMapType>(config.spacemap_type.get()),
+        static_cast<SpaceMap::SpaceMapType>(config.spacemap_type),
         max_caps,
         stat_type);
 

@@ -44,7 +44,7 @@ private:
         // Fields' offset inside Page's data
         PageFieldOffsetChecksums offsets;
 
-        std::optional<PS::V3::CheckpointLocation> data_location = std::nullopt;
+        //        std::optional<PS::V3::CheckpointLocation> data_location = std::nullopt;
     };
     using Writes = std::vector<Write>;
 
@@ -58,20 +58,20 @@ public:
         putPage(UniversalPageIdFormat::toFullPageId(prefix, page_id), tag, read_buffer, size, data_sizes);
     }
 
-    void putRemotePage(PageIdU64 page_id, UInt64 tag, PageSize size, const PS::V3::CheckpointLocation & data_location, PageFieldOffsetChecksums && offset_and_checksums)
-    {
-        putRemotePage(UniversalPageIdFormat::toFullPageId(prefix, page_id), tag, size, data_location, std::move(offset_and_checksums));
-    }
+    //    void putRemotePage(PageIdU64 page_id, UInt64 tag, PageSize size, const PS::V3::CheckpointLocation & data_location, PageFieldOffsetChecksums && offset_and_checksums)
+    //    {
+    //        putRemotePage(UniversalPageIdFormat::toFullPageId(prefix, page_id), tag, size, data_location, std::move(offset_and_checksums));
+    //    }
 
     void putExternal(PageIdU64 page_id, UInt64 tag)
     {
         putExternal(UniversalPageIdFormat::toFullPageId(prefix, page_id), tag);
     }
 
-    void putRemoteExternal(PageIdU64 page_id, const PS::V3::CheckpointLocation & data_location)
-    {
-        putRemoteExternal(UniversalPageIdFormat::toFullPageId(prefix, page_id), data_location);
-    }
+    //    void putRemoteExternal(PageIdU64 page_id, const PS::V3::CheckpointLocation & data_location)
+    //    {
+    //        putRemoteExternal(UniversalPageIdFormat::toFullPageId(prefix, page_id), data_location);
+    //    }
 
     // Add RefPage{ref_id} -> Page{page_id}
     void putRefPage(PageIdU64 ref_id, PageIdU64 page_id)
@@ -114,20 +114,20 @@ public:
         putPage(page_id, tag, buffer_ptr, data.size(), data_sizes);
     }
 
-    void putRemotePage(const UniversalPageId & page_id, UInt64 tag, PageSize size, const PS::V3::CheckpointLocation & data_location, PageFieldOffsetChecksums && offset_and_checksums)
-    {
-        Write w{WriteBatchWriteType::PUT_REMOTE, page_id, tag, nullptr, size, "", std::move(offset_and_checksums), data_location};
-        writes.emplace_back(std::move(w));
-        has_writes_from_remote = true;
-    }
+    //    void putRemotePage(const UniversalPageId & page_id, UInt64 tag, PageSize size, const PS::V3::CheckpointLocation & data_location, PageFieldOffsetChecksums && offset_and_checksums)
+    //    {
+    //        Write w{WriteBatchWriteType::PUT_REMOTE, page_id, tag, nullptr, size, "", std::move(offset_and_checksums), data_location};
+    //        writes.emplace_back(std::move(w));
+    //        has_writes_from_remote = true;
+    //    }
 
-    void updateRemotePage(const UniversalPageId & page_id, const ReadBufferPtr & read_buffer, PageSize size)
-    {
-        Write w{WriteBatchWriteType::UPDATE_DATA_FROM_REMOTE, page_id, 0, read_buffer, size, "", {}};
-        total_data_size += size;
-        writes.emplace_back(std::move(w));
-        // This is use for update local page data from remote, don't need to set `has_writes_from_remote`
-    }
+    //    void updateRemotePage(const UniversalPageId & page_id, const ReadBufferPtr & read_buffer, PageSize size)
+    //    {
+    //        Write w{WriteBatchWriteType::UPDATE_DATA_FROM_REMOTE, page_id, 0, read_buffer, size, "", {}};
+    //        total_data_size += size;
+    //        writes.emplace_back(std::move(w));
+    //        // This is use for update local page data from remote, don't need to set `has_writes_from_remote`
+    //    }
 
     void putExternal(const UniversalPageId & page_id, UInt64 tag)
     {
@@ -136,13 +136,13 @@ public:
         writes.emplace_back(std::move(w));
     }
 
-    void putRemoteExternal(const UniversalPageId & page_id, const PS::V3::CheckpointLocation & data_location)
-    {
-        // TODO: do we need another write type for PUT_REMOTE_EXTERNAL?
-        Write w{WriteBatchWriteType::PUT_EXTERNAL, page_id, /*tag*/ 0, nullptr, 0, "", {}, data_location};
-        writes.emplace_back(std::move(w));
-        has_writes_from_remote = true;
-    }
+    //    void putRemoteExternal(const UniversalPageId & page_id, const PS::V3::CheckpointLocation & data_location)
+    //    {
+    //        // TODO: do we need another write type for PUT_REMOTE_EXTERNAL?
+    //        Write w{WriteBatchWriteType::PUT_EXTERNAL, page_id, /*tag*/ 0, nullptr, 0, "", {}, data_location};
+    //        writes.emplace_back(std::move(w));
+    //        has_writes_from_remote = true;
+    //    }
 
     // Add RefPage{ref_id} -> Page{page_id}
     void putRefPage(const UniversalPageId & ref_id, const UniversalPageId & page_id)
@@ -221,9 +221,9 @@ public:
                 case WriteBatchWriteType::PUT_EXTERNAL:
                     fb.fmtAppend("E{}", w.page_id);
                     break;
-                case WriteBatchWriteType::PUT_REMOTE:
-                    fb.fmtAppend("R{}", w.page_id);
-                    break;
+                    //                case WriteBatchWriteType::PUT_REMOTE:
+                    //                    fb.fmtAppend("R{}", w.page_id);
+                    //                    break;
                 default:
                     fb.fmtAppend("Unknown {}", w.page_id);
                     break;

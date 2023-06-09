@@ -16,10 +16,9 @@
 #include <Common/Exception.h>
 #include <Common/TiFlashMetrics.h>
 #include <Encryption/RateLimiter.h>
-#include <Poco/Util/AbstractConfiguration.h>
-#include <boost_wrapper/string.h>
-
+//#include <Poco/Util/AbstractConfiguration.h>
 #include <Common/logger_useful.h>
+#include <Common/string.h>
 
 #include <cassert>
 #include <fstream>
@@ -43,44 +42,44 @@ extern const int LOGICAL_ERROR;
 
 inline void metricRequestBytes(LimiterType type, Int64 bytes)
 {
-    switch (type)
-    {
-    case LimiterType::FG_READ:
-        GET_METRIC(tiflash_storage_io_limiter, type_fg_read_req_bytes).Increment(bytes);
-        break;
-    case LimiterType::BG_READ:
-        GET_METRIC(tiflash_storage_io_limiter, type_bg_read_req_bytes).Increment(bytes);
-        break;
-    case LimiterType::FG_WRITE:
-        GET_METRIC(tiflash_storage_io_limiter, type_fg_write_req_bytes).Increment(bytes);
-        break;
-    case LimiterType::BG_WRITE:
-        GET_METRIC(tiflash_storage_io_limiter, type_bg_write_req_bytes).Increment(bytes);
-        break;
-    default:
-        break;
-    }
+    //    switch (type)
+    //    {
+    //    case LimiterType::FG_READ:
+    //        GET_METRIC(tiflash_storage_io_limiter, type_fg_read_req_bytes).Increment(bytes);
+    //        break;
+    //    case LimiterType::BG_READ:
+    //        GET_METRIC(tiflash_storage_io_limiter, type_bg_read_req_bytes).Increment(bytes);
+    //        break;
+    //    case LimiterType::FG_WRITE:
+    //        GET_METRIC(tiflash_storage_io_limiter, type_fg_write_req_bytes).Increment(bytes);
+    //        break;
+    //    case LimiterType::BG_WRITE:
+    //        GET_METRIC(tiflash_storage_io_limiter, type_bg_write_req_bytes).Increment(bytes);
+    //        break;
+    //    default:
+    //        break;
+    //    }
 }
 
 inline void metricAllocBytes(LimiterType type, Int64 bytes)
 {
-    switch (type)
-    {
-    case LimiterType::FG_READ:
-        GET_METRIC(tiflash_storage_io_limiter, type_fg_read_alloc_bytes).Increment(bytes);
-        break;
-    case LimiterType::BG_READ:
-        GET_METRIC(tiflash_storage_io_limiter, type_bg_read_alloc_bytes).Increment(bytes);
-        break;
-    case LimiterType::FG_WRITE:
-        GET_METRIC(tiflash_storage_io_limiter, type_fg_write_alloc_bytes).Increment(bytes);
-        break;
-    case LimiterType::BG_WRITE:
-        GET_METRIC(tiflash_storage_io_limiter, type_bg_write_alloc_bytes).Increment(bytes);
-        break;
-    default:
-        break;
-    }
+    //    switch (type)
+    //    {
+    //    case LimiterType::FG_READ:
+    //        GET_METRIC(tiflash_storage_io_limiter, type_fg_read_alloc_bytes).Increment(bytes);
+    //        break;
+    //    case LimiterType::BG_READ:
+    //        GET_METRIC(tiflash_storage_io_limiter, type_bg_read_alloc_bytes).Increment(bytes);
+    //        break;
+    //    case LimiterType::FG_WRITE:
+    //        GET_METRIC(tiflash_storage_io_limiter, type_fg_write_alloc_bytes).Increment(bytes);
+    //        break;
+    //    case LimiterType::BG_WRITE:
+    //        GET_METRIC(tiflash_storage_io_limiter, type_bg_write_alloc_bytes).Increment(bytes);
+    //        break;
+    //    default:
+    //        break;
+    //    }
 }
 
 inline CurrentMetrics::Increment pendingRequestMetrics(LimiterType type)
@@ -439,25 +438,25 @@ void IORateLimiter::updateConfig(Poco::Util::AbstractConfiguration & config_)
     updateWriteLimiter(io_config.getBgWriteMaxBytesPerSec(), io_config.getFgWriteMaxBytesPerSec());
 }
 
-bool IORateLimiter::readConfig(Poco::Util::AbstractConfiguration & config_, StorageIORateLimitConfig & new_io_config)
-{
-    if (config_.has("storage.io_rate_limit"))
-    {
-        new_io_config.parse(config_.getString("storage.io_rate_limit"), log);
-    }
-    else
-    {
-        LOG_INFO(log, "storage.io_rate_limit is not found in config, use default config.");
-    }
-    if (io_config == new_io_config)
-    {
-        LOG_INFO(log, "storage.io_rate_limit is not changed.");
-        return false;
-    }
-    LOG_INFO(log, "storage.io_rate_limit is changed: {} => {}", io_config.toString(), new_io_config.toString());
-    io_config = new_io_config;
-    return true;
-}
+//bool IORateLimiter::readConfig(Poco::Util::AbstractConfiguration & config_, StorageIORateLimitConfig & new_io_config)
+//{
+//    if (config_.has("storage.io_rate_limit"))
+//    {
+//        new_io_config.parse(config_.getString("storage.io_rate_limit"), log);
+//    }
+//    else
+//    {
+//        LOG_INFO(log, "storage.io_rate_limit is not found in config, use default config.");
+//    }
+//    if (io_config == new_io_config)
+//    {
+//        LOG_INFO(log, "storage.io_rate_limit is not changed.");
+//        return false;
+//    }
+//    LOG_INFO(log, "storage.io_rate_limit is changed: {} => {}", io_config.toString(), new_io_config.toString());
+//    io_config = new_io_config;
+//    return true;
+//}
 
 void IORateLimiter::updateReadLimiter(Int64 bg_bytes, Int64 fg_bytes)
 {

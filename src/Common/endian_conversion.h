@@ -10,22 +10,17 @@
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
-// limitations under the License.#pragma once
+// limitations under the License.
 
-syntax = "proto3";
+#pragma once
 
-package DB.PS.V3.CheckpointProto;
+#if defined(__clang__) && __clang_major__ >= 15
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-builtins"
+#endif
 
-message WriterInfo {
-    uint64 store_id = 1;
-    string version = 2;
-    string version_git = 3;
-    uint64 start_at_ms = 4;
-    RemoteInfo remote_info = 5;
-}
+#include <boost/endian/conversion.hpp>
 
-message RemoteInfo {
-    string type_name = 1; // e.g. "S3" / "LocalFS"
-    string name = 2; // Remote-type specific name for description purpose.
-    string root = 3; // Identifier for the cluster. It is the `storage.s3.root` when using S3
-}
+#if defined(__clang__) && __clang_major__ >= 15
+#pragma GCC diagnostic pop
+#endif

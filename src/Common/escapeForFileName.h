@@ -1,4 +1,4 @@
-// Copyright 2023 PingCAP, Ltd.
+// Copyright 2022 PingCAP, Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,14 +14,17 @@
 
 #pragma once
 
-#include <Core/Types.h>
-#include <Common/types.h>
+#include <Common/StringRef.h>
 
-namespace DB::PS::V3
+#include <string>
+
+
+namespace DB
 {
-struct LocalCheckpointFiles
-{
-    Strings data_files;
-    String manifest_file;
-};
-} // namespace DB::PS::V3
+/** Convert a string, so result could be used as a file name.
+  * In fact it percent-encode all non-word characters, as in URL.
+  */
+
+std::string escapeForFileName(const StringRef & s);
+std::string unescapeForFileName(const StringRef & s);
+} // namespace DB

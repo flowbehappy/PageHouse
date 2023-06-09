@@ -24,8 +24,6 @@ set (CONFIG_COMMON ${CMAKE_CURRENT_BINARY_DIR}/Common/config_common.h)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/Common/config_common.h.in ${CONFIG_COMMON})
 message(STATUS "config common path: ${CONFIG_COMMON}")
 
-add_subdirectory (./V3/CheckpointFile/Proto)
-
 add_headers_and_sources(page .)
 add_headers_and_sources(page ./Common)
 add_headers_and_sources(page ./Common/StringUtils)

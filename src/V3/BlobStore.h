@@ -15,7 +15,7 @@
 #pragma once
 
 #include <Common/Exception.h>
-#include <Interpreters/SettingsCommon.h>
+//#include <Interpreters/SettingsCommon.h>
 #include <FileUsage.h>
 #include <Page.h>
 #include <V3/Blob/BlobConfig.h>

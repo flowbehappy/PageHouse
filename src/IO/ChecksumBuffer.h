@@ -18,6 +18,7 @@
 #endif // TIFLASH_DEFAULT_CHECKSUM_FRAME_SIZE
 
 #include <Common/Checksum.h>
+#include <Common/TiFlashException.h>
 #include <Encryption/FileProvider.h>
 #include <IO/ReadBufferFromFileDescriptor.h>
 #include <IO/WriteBufferFromFileDescriptor.h>

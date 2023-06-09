@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include <IO/MemoryReadWriteBuffer.h>
-#include <Common/likely.h>
 
 #include <boost/noncopyable.hpp>
 

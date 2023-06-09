@@ -16,6 +16,7 @@
 
 #include <Common/nocopyable.h>
 #include <Encryption/FileProvider_fwd.h>
+#include <PathPool.h>
 #include <V3/LogFile/LogFilename.h>
 #include <V3/LogFile/LogReader.h>
 #include <V3/WALStore.h>

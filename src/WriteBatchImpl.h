@@ -43,9 +43,9 @@ enum class WriteBatchWriteType : UInt8
     // to get its lifetime management correct.
     PUT_EXTERNAL = 4,
     // Put a remote page which data is stored on remote storage
-    PUT_REMOTE = 5,
+    //    PUT_REMOTE = 5,
     // Update local cache for remote page
-    UPDATE_DATA_FROM_REMOTE = 6,
+    //    UPDATE_DATA_FROM_REMOTE = 6,
 };
 
 class WriteBatch : private boost::noncopyable
@@ -76,7 +76,7 @@ private:
         UInt64 page_checksum;
         PageFileIdAndLevel target_file_id;
 
-        std::optional<PS::V3::CheckpointLocation> data_location = std::nullopt;
+        //        std::optional<PS::V3::CheckpointLocation> data_location = std::nullopt;
     };
     using Writes = std::vector<Write>;
 
@@ -265,9 +265,9 @@ public:
                 case WriteBatchWriteType::PUT_EXTERNAL:
                     fb.fmtAppend("E{}.{}", namespace_id, w.page_id);
                     break;
-                case WriteBatchWriteType::PUT_REMOTE:
-                    fb.fmtAppend("R{}.{}", namespace_id, w.page_id);
-                    break;
+                    //                case WriteBatchWriteType::PUT_REMOTE:
+                    //                    fb.fmtAppend("R{}.{}", namespace_id, w.page_id);
+                    //                    break;
                 default:
                     fb.fmtAppend("Unknown {}.{}", namespace_id, w.page_id);
                     break;

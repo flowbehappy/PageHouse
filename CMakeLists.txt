@@ -32,6 +32,7 @@ include (cmake/find_zlib.cmake)
 include (cmake/find_poco.cmake)
 include (cmake/find_protobuf.cmake)
 include (cmake/find_lz4.cmake)
+include (cmake/find_gtest.cmake)
 
 include_directories (src)
 

@@ -14,20 +14,20 @@
 
 #pragma once
 
-#include <Interpreters/SettingsCommon.h>
+//#include <Interpreters/SettingsCommon.h>
+#include <Common/defines.h>
 #include <Config.h>
 #include <V3/PageDefines.h>
 #include <V3/spacemap/SpaceMap.h>
-#include <Common/defines.h>
 
 namespace DB::PS::V3
 {
 struct BlobConfig
 {
-    SettingUInt64 file_limit_size = BLOBFILE_LIMIT_SIZE;
-    SettingUInt64 spacemap_type = SpaceMap::SpaceMapType::SMAP64_STD_MAP;
-    SettingUInt64 block_alignment_bytes = 0;
-    SettingDouble heavy_gc_valid_rate = 0.2;
+    UInt64 file_limit_size = BLOBFILE_LIMIT_SIZE;
+    UInt64 spacemap_type = SpaceMap::SpaceMapType::SMAP64_STD_MAP;
+    UInt64 block_alignment_bytes = 0;
+    Float64 heavy_gc_valid_rate = 0.2;
 
     String toString()
     {

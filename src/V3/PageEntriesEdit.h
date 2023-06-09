@@ -15,11 +15,11 @@
 #pragma once
 
 #include <Common/nocopyable.h>
-#include <V3/CheckpointFile/Proto/manifest_file.pb.h>
+//#include <V3/CheckpointFile/Proto/manifest_file.pb.h>
+#include <Common/types.h>
 #include <V3/PageDefines.h>
 #include <V3/PageEntry.h>
 #include <V3/Universal/UniversalPageId.h>
-#include <Common/types.h>
 #include <fmt/format.h>
 
 #include <magic_enum.hpp>
@@ -122,39 +122,39 @@ inline const char * typeToString(EditRecordType t)
     }
 }
 
-inline CheckpointProto::EditType typeToProto(EditRecordType t)
-{
-    switch (t)
-    {
-    case EditRecordType::VAR_ENTRY:
-        return CheckpointProto::EDIT_TYPE_ENTRY;
-    case EditRecordType::VAR_REF:
-        return CheckpointProto::EDIT_TYPE_REF;
-    case EditRecordType::VAR_EXTERNAL:
-        return CheckpointProto::EDIT_TYPE_EXTERNAL;
-    case EditRecordType::VAR_DELETE:
-        return CheckpointProto::EDIT_TYPE_DELETE;
-    default:
-        RUNTIME_CHECK_MSG(false, "Unsupported Edit Type {}", magic_enum::enum_name(t));
-    }
-}
-
-inline EditRecordType typeFromProto(CheckpointProto::EditType t)
-{
-    switch (t)
-    {
-    case CheckpointProto::EDIT_TYPE_ENTRY:
-        return EditRecordType::VAR_ENTRY;
-    case CheckpointProto::EDIT_TYPE_REF:
-        return EditRecordType::VAR_REF;
-    case CheckpointProto::EDIT_TYPE_EXTERNAL:
-        return EditRecordType::VAR_EXTERNAL;
-    case CheckpointProto::EDIT_TYPE_DELETE:
-        return EditRecordType::VAR_DELETE;
-    default:
-        RUNTIME_CHECK_MSG(false, "Unsupported Proto Edit Type {}", magic_enum::enum_name(t));
-    }
-}
+//inline CheckpointProto::EditType typeToProto(EditRecordType t)
+//{
+//    switch (t)
+//    {
+//    case EditRecordType::VAR_ENTRY:
+//        return CheckpointProto::EDIT_TYPE_ENTRY;
+//    case EditRecordType::VAR_REF:
+//        return CheckpointProto::EDIT_TYPE_REF;
+//    case EditRecordType::VAR_EXTERNAL:
+//        return CheckpointProto::EDIT_TYPE_EXTERNAL;
+//    case EditRecordType::VAR_DELETE:
+//        return CheckpointProto::EDIT_TYPE_DELETE;
+//    default:
+//        RUNTIME_CHECK_MSG(false, "Unsupported Edit Type {}", magic_enum::enum_name(t));
+//    }
+//}
+//
+//inline EditRecordType typeFromProto(CheckpointProto::EditType t)
+//{
+//    switch (t)
+//    {
+//    case CheckpointProto::EDIT_TYPE_ENTRY:
+//        return EditRecordType::VAR_ENTRY;
+//    case CheckpointProto::EDIT_TYPE_REF:
+//        return EditRecordType::VAR_REF;
+//    case CheckpointProto::EDIT_TYPE_EXTERNAL:
+//        return EditRecordType::VAR_EXTERNAL;
+//    case CheckpointProto::EDIT_TYPE_DELETE:
+//        return EditRecordType::VAR_DELETE;
+//    default:
+//        RUNTIME_CHECK_MSG(false, "Unsupported Proto Edit Type {}", magic_enum::enum_name(t));
+//    }
+//}
 
 /// Page entries change to apply to PageDirectory
 template <typename PageIdType>
@@ -281,11 +281,11 @@ public:
         PageEntryV3 entry;
         Int64 being_ref_count{1};
 
-        CheckpointProto::EditRecord toProto() const;
-
-        static EditRecord fromProto(
-            const CheckpointProto::EditRecord & edit_rec,
-            CheckpointProto::StringsInternMap & strings_map);
+        //        CheckpointProto::EditRecord toProto() const;
+        //
+        //        static EditRecord fromProto(
+        //            const CheckpointProto::EditRecord & edit_rec,
+        //            CheckpointProto::StringsInternMap & strings_map);
     };
     using EditRecords = std::vector<EditRecord>;
 

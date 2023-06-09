@@ -95,7 +95,7 @@ String GCTimeStatistics::toLogging() const
 void GCTimeStatistics::finishCleanExternalPage(UInt64 clean_cost_ms)
 {
     clean_external_page_ms = clean_cost_ms;
-    GET_METRIC(tiflash_storage_page_gc_duration_seconds, type_clean_external).Observe(clean_external_page_ms / 1000.0);
+    //    GET_METRIC(tiflash_storage_page_gc_duration_seconds, type_clean_external).Observe(clean_external_page_ms / 1000.0);
 }
 
 template <typename Trait>
@@ -134,7 +134,6 @@ bool ExternalPageCallbacksManager<Trait>::gc(
     typename Trait::PageDirectory & page_directory,
     const WriteLimiterPtr & write_limiter,
     const ReadLimiterPtr & read_limiter,
-    RemoteFileValidSizes * remote_valid_sizes,
     LoggerPtr log)
 {
     // If another thread is running gc, just return;
@@ -142,7 +141,7 @@ bool ExternalPageCallbacksManager<Trait>::gc(
     if (!gc_is_running.compare_exchange_strong(v, true))
         return false;
 
-    const GCTimeStatistics statistics = doGC(blob_store, page_directory, write_limiter, read_limiter, remote_valid_sizes);
+    const GCTimeStatistics statistics = doGC(blob_store, page_directory, write_limiter, read_limiter);
     assert(statistics.stage != GCStageType::Unknown); // `doGC` must set the stage
     LOG_IMPL(log, statistics.getLoggingLevel(), statistics.toLogging());
 
@@ -217,13 +216,12 @@ GCTimeStatistics ExternalPageCallbacksManager<Trait>::doGC(
     typename Trait::BlobStore & blob_store,
     typename Trait::PageDirectory & page_directory,
     const WriteLimiterPtr & write_limiter,
-    const ReadLimiterPtr & read_limiter,
-    RemoteFileValidSizes * remote_valid_sizes)
+    const ReadLimiterPtr & read_limiter)
 {
     Stopwatch gc_watch;
     SCOPE_EXIT({
-        GET_METRIC(tiflash_storage_page_gc_count, type_v3).Increment();
-        GET_METRIC(tiflash_storage_page_gc_duration_seconds, type_v3).Observe(gc_watch.elapsedSeconds());
+        //        GET_METRIC(tiflash_storage_page_gc_count, type_v3).Increment();
+        //        GET_METRIC(tiflash_storage_page_gc_duration_seconds, type_v3).Observe(gc_watch.elapsedSeconds());
         bool is_running = true;
         gc_is_running.compare_exchange_strong(is_running, false);
     });
@@ -239,20 +237,20 @@ GCTimeStatistics ExternalPageCallbacksManager<Trait>::doGC(
     statistics.compact_wal_happen = page_directory.tryDumpSnapshot(read_limiter, write_limiter, force_wal_compact);
     if (statistics.compact_wal_happen)
     {
-        GET_METRIC(tiflash_storage_page_gc_count, type_v3_mvcc_dumped).Increment();
+        //        GET_METRIC(tiflash_storage_page_gc_count, type_v3_mvcc_dumped).Increment();
     }
     statistics.compact_wal_ms = gc_watch.elapsedMillisecondsFromLastTime();
-    GET_METRIC(tiflash_storage_page_gc_duration_seconds, type_compact_wal).Observe(statistics.compact_wal_ms / 1000.0);
+    //    GET_METRIC(tiflash_storage_page_gc_duration_seconds, type_compact_wal).Observe(statistics.compact_wal_ms / 1000.0);
 
     typename Trait::PageDirectory::InMemGCOption options;
     if constexpr (std::is_same_v<Trait, universal::ExternalPageCallbacksManagerTrait>)
     {
-        assert(remote_valid_sizes != nullptr);
-        options.remote_valid_sizes = remote_valid_sizes;
+        //        assert(remote_valid_sizes != nullptr);
+        //        options.remote_valid_sizes = remote_valid_sizes;
     }
     const auto & del_entries = page_directory.gcInMemEntries(options);
     statistics.compact_directory_ms = gc_watch.elapsedMillisecondsFromLastTime();
-    GET_METRIC(tiflash_storage_page_gc_duration_seconds, type_compact_directory).Observe(statistics.compact_directory_ms / 1000.0);
+    //    GET_METRIC(tiflash_storage_page_gc_duration_seconds, type_compact_directory).Observe(statistics.compact_directory_ms / 1000.0);
 
     SYNC_FOR("before_PageStorageImpl::doGC_fullGC_prepare");
 
@@ -261,7 +259,7 @@ GCTimeStatistics ExternalPageCallbacksManager<Trait>::doGC(
     // It will only update the SpaceMap which in memory.
     blob_store.remove(del_entries);
     statistics.compact_spacemap_ms = gc_watch.elapsedMillisecondsFromLastTime();
-    GET_METRIC(tiflash_storage_page_gc_duration_seconds, type_compact_spacemap).Observe(statistics.compact_spacemap_ms / 1000.0);
+    //    GET_METRIC(tiflash_storage_page_gc_duration_seconds, type_compact_spacemap).Observe(statistics.compact_spacemap_ms / 1000.0);
 
     // Note that if full GC is not executed, below metrics won't be shown on grafana but it should
     // only take few ms to finish these in-memory operations. Check them out by the logs if
@@ -280,7 +278,7 @@ GCTimeStatistics ExternalPageCallbacksManager<Trait>::doGC(
     }
 
     // Execute full gc
-    GET_METRIC(tiflash_storage_page_gc_count, type_v3_bs_full_gc).Increment(blob_ids_need_gc.size());
+    //    GET_METRIC(tiflash_storage_page_gc_count, type_v3_bs_full_gc).Increment(blob_ids_need_gc.size());
     // 4. Filter out entries in MVCC by BlobId.
     // We also need to filter the version of the entry.
     // So that the `gc_apply` can proceed smoothly.
@@ -301,8 +299,8 @@ GCTimeStatistics ExternalPageCallbacksManager<Trait>::doGC(
     // Then we should notify MVCC apply the change.
     PageEntriesEdit gc_edit = blob_store.gc(blob_gc_info, total_page_size, write_limiter, read_limiter);
     statistics.full_gc_blobstore_copy_ms = gc_watch.elapsedMillisecondsFromLastTime();
-    GET_METRIC(tiflash_storage_page_gc_duration_seconds, type_fullgc_rewrite).Observe( //
-        (statistics.full_gc_prepare_ms + statistics.full_gc_get_entries_ms + statistics.full_gc_blobstore_copy_ms) / 1000.0);
+    //    GET_METRIC(tiflash_storage_page_gc_duration_seconds, type_fullgc_rewrite).Observe( //
+    //        (statistics.full_gc_prepare_ms + statistics.full_gc_get_entries_ms + statistics.full_gc_blobstore_copy_ms) / 1000.0);
     RUNTIME_CHECK_MSG(!gc_edit.empty(), "Something wrong after BlobStore GC");
 
     // 6. MVCC gc apply
@@ -314,7 +312,7 @@ GCTimeStatistics ExternalPageCallbacksManager<Trait>::doGC(
     // Those BlobFiles should be cleaned during next restore.
     page_directory.gcApply(std::move(gc_edit), write_limiter);
     statistics.full_gc_apply_ms = gc_watch.elapsedMillisecondsFromLastTime();
-    GET_METRIC(tiflash_storage_page_gc_duration_seconds, type_fullgc_commit).Observe(statistics.full_gc_apply_ms / 1000.0);
+    //    GET_METRIC(tiflash_storage_page_gc_duration_seconds, type_fullgc_commit).Observe(statistics.full_gc_apply_ms / 1000.0);
 
     SYNC_FOR("after_PageStorageImpl::doGC_fullGC_commit");
 

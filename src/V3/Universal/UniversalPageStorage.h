@@ -15,22 +15,16 @@
 #pragma once
 
 #include <Common/Stopwatch.h>
-#include <Encryption/FileProvider_fwd.h>
-#include <IO/WriteBufferFromString.h>
-#include <IO/WriteHelpers.h>
-#include <Storages/DeltaMerge/Remote/DataStore/DataStore.h>
 #include <Config.h>
+#include <Encryption/FileProvider_fwd.h>
 #include <ExternalPageCallbacks.h>
 #include <FileUsage.h>
+#include <IO/WriteBufferFromString.h>
+#include <IO/WriteHelpers.h>
 #include <Snapshot.h>
 #include <V3/BlobStore.h>
-#include <V3/CheckpointFile/CPDataFileStat.h>
-#include <V3/CheckpointFile/CheckpointFiles.h>
 #include <V3/GCDefines.h>
 #include <V3/PageDirectory.h>
-#include <V3/Universal/S3LockLocalManager.h>
-#include <V3/Universal/S3PageReader.h>
-#include defines.h>
 
 namespace DB
 {
@@ -39,23 +33,10 @@ class PathCapacityMetrics;
 using PathCapacityMetricsPtr = std::shared_ptr<PathCapacityMetrics>;
 class PSDiskDelegator;
 using PSDiskDelegatorPtr = std::shared_ptr<PSDiskDelegator>;
-class Context;
 class WriteLimiter;
 using WriteLimiterPtr = std::shared_ptr<WriteLimiter>;
 class ReadLimiter;
 using ReadLimiterPtr = std::shared_ptr<ReadLimiter>;
-
-namespace S3
-{
-class IS3LockClient;
-using S3LockClientPtr = std::shared_ptr<IS3LockClient>;
-} // namespace S3
-
-namespace PS::V3
-{
-class S3LockLocalManager;
-using S3LockLocalManagerPtr = std::unique_ptr<S3LockLocalManager>;
-} // namespace PS::V3
 
 class UniversalPageStorage;
 using UniversalPageStoragePtr = std::shared_ptr<UniversalPageStorage>;
@@ -133,14 +114,6 @@ public:
 
     DB::PageEntry getEntry(const UniversalPageId & page_id, SnapshotPtr snapshot = {}) const;
 
-    std::optional<DB::PS::V3::CheckpointLocation> getCheckpointLocation(const UniversalPageId & page_id, SnapshotPtr snapshot = {}) const;
-
-    void initLocksLocalManager(StoreID store_id, S3::S3LockClientPtr lock_client);
-
-    bool canSkipCheckpoint() const;
-
-    PS::V3::S3LockLocalManager::ExtraLockInfo allocateNewUploadLocksInfo() const;
-
     struct DumpCheckpointOptions
     {
         /**
@@ -166,7 +139,7 @@ public:
         /**
          * The writer info field in the dumped files.
          */
-        const PS::V3::CheckpointProto::WriterInfo & writer_info;
+        //        const PS::V3::CheckpointProto::WriterInfo & writer_info;
 
         /**
          * The list of lock files that will be always appended to the checkpoint file.
@@ -174,7 +147,7 @@ public:
          * Note: In addition to the specified lock files, the checkpoint file will also contain
          * lock files from `writeEditsAndApplyCheckpointInfo`.
          */
-        const std::unordered_set<String> & must_locked_files = {};
+        //        const std::unordered_set<String> & must_locked_files = {};
 
         /**
          * A callback to persist the checkpoint to remote data store.
@@ -182,7 +155,7 @@ public:
          * If the checkpoint persist failed, it must throw an exception or return false
          * to prevent the incremental data lost between checkpoints.
          */
-        const std::function<bool(const PS::V3::LocalCheckpointFiles &)> persist_checkpoint;
+        //        const std::function<bool(const PS::V3::LocalCheckpointFiles &)> persist_checkpoint;
 
         /**
          * Override the value of `seq` placeholder in the data files and manifest file.
@@ -198,17 +171,17 @@ public:
         UInt64 max_edit_records_per_part = 100000;
     };
 
-    PS::V3::CPDataWriteStats dumpIncrementalCheckpoint(const DumpCheckpointOptions & options);
-
-    PS::V3::CPDataFilesStatCache::CacheMap getRemoteDataFilesStatCache() const
-    {
-        return remote_data_files_stat_cache.getCopy();
-    }
-
-    void updateRemoteFilesStatCache(const PS::V3::CPDataFilesStatCache::CacheMap & updated_stat)
-    {
-        remote_data_files_stat_cache.updateCache(updated_stat);
-    }
+    //    PS::V3::CPDataWriteStats dumpIncrementalCheckpoint(const DumpCheckpointOptions & options);
+    //
+    //    PS::V3::CPDataFilesStatCache::CacheMap getRemoteDataFilesStatCache() const
+    //    {
+    //        return remote_data_files_stat_cache.getCopy();
+    //    }
+    //
+    //    void updateRemoteFilesStatCache(const PS::V3::CPDataFilesStatCache::CacheMap & updated_stat)
+    //    {
+    //        remote_data_files_stat_cache.updateCache(updated_stat);
+    //    }
 
     PageIdU64 getMaxIdAfterRestart() const;
 
@@ -241,11 +214,6 @@ public:
 
     using BlobStorePtr = std::unique_ptr<PS::V3::universal::BlobStoreType>;
     BlobStorePtr blob_store;
-
-    PS::V3::CPDataFilesStatCache remote_data_files_stat_cache;
-
-    PS::V3::S3PageReaderPtr remote_reader;
-    PS::V3::S3LockLocalManagerPtr remote_locks_local_mgr;
 
     PS::V3::universal::ExternalPageCallbacksManager manager;
 

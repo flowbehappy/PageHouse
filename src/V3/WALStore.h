@@ -15,15 +15,15 @@
 #pragma once
 
 #include <Common/Checksum.h>
+#include <Common/types.h>
 #include <Encryption/FileProvider_fwd.h>
-#include <Interpreters/SettingsCommon.h>
 #include <FileUsage.h>
+#include <PathPool.h>
 #include <V3/LogFile/LogFilename.h>
 #include <V3/LogFile/LogFormat.h>
 #include <V3/LogFile/LogWriter.h>
 #include <V3/PageEntriesEdit.h>
 #include <V3/WAL/WALConfig.h>
-#include <Common/types.h>
 
 #include <memory>
 
@@ -31,8 +31,6 @@ namespace DB
 {
 class WriteLimiter;
 using WriteLimiterPtr = std::shared_ptr<WriteLimiter>;
-class PSDiskDelegator;
-using PSDiskDelegatorPtr = std::shared_ptr<PSDiskDelegator>;
 namespace PS::V3
 {
 namespace tests
@@ -105,7 +103,7 @@ public:
 
 private:
     WALStore(String storage_name,
-             const PSDiskDelegatorPtr & delegator_,
+             const PSDiskDelegatorPtr & delegator,
              const FileProviderPtr & provider_,
              Format::LogNumberType last_log_num_,
              const WALConfig & config);

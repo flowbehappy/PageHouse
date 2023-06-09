@@ -16,12 +16,14 @@
 
 #include <Common/CurrentMetrics.h>
 #include <Common/Logger.h>
+#include <Common/ThreadNumber.h>
+#include <Common/defines.h>
 #include <Common/nocopyable.h>
+#include <Common/types.h>
 #include <Encryption/FileProvider.h>
-#include <Poco/Ext/ThreadNumber.h>
 #include <Snapshot.h>
 #include <V3/BlobStore.h>
-#include <V3/CheckpointFile/CPDataFileStat.h>
+//#include <V3/CheckpointFile/CPDataFileStat.h>
 #include <V3/MapUtils.h>
 #include <V3/PageDefines.h>
 #include <V3/PageDirectory/ExternalIdsByNamespace.h>
@@ -29,8 +31,6 @@
 #include <V3/PageEntry.h>
 #include <V3/WAL/serialize.h>
 #include <V3/WALStore.h>
-#include <Common/defines.h>
-#include <Common/types.h>
 
 #include <magic_enum.hpp>
 #include <memory>
@@ -178,7 +178,7 @@ public:
 
     // Update the local cache info for remote page,
     // Must a hold snap to prevent the page being deleted.
-    bool updateLocalCacheForRemotePage(const PageVersion & ver, const PageEntryV3 & entry);
+    //    bool updateLocalCacheForRemotePage(const PageVersion & ver, const PageEntryV3 & entry);
 
     std::shared_ptr<PageId> fromRestored(const typename PageEntriesEdit::EditRecord & rec);
 
@@ -191,7 +191,7 @@ public:
 
     std::optional<PageEntryV3> getLastEntry(std::optional<UInt64> seq) const;
 
-    void copyCheckpointInfoFromEdit(const typename PageEntriesEdit::EditRecord & edit);
+    //    void copyCheckpointInfoFromEdit(const typename PageEntriesEdit::EditRecord & edit);
 
     bool isVisible(UInt64 seq) const;
 
@@ -221,7 +221,6 @@ public:
         UInt64 lowest_seq,
         std::map<PageId, std::pair<PageVersion, Int64>> * normal_entries_to_deref,
         PageEntriesV3 * entries_removed,
-        RemoteFileValidSizes * remote_file_sizes,
         const PageLock & page_lock);
     /**
      * Decrease the ref-count of entry with given `deref_ver`.
@@ -355,7 +354,7 @@ public:
     std::unordered_set<String> apply(PageEntriesEdit && edit, const WriteLimiterPtr & write_limiter = nullptr);
 
     // return ignored entries, and the corresponding space in BlobFile should be reclaimed
-    PageEntries updateLocalCacheForRemotePages(PageEntriesEdit && edit, const DB::PageStorageSnapshotPtr & snap_, const WriteLimiterPtr & write_limiter = nullptr);
+    //    PageEntries updateLocalCacheForRemotePages(PageEntriesEdit && edit, const DB::PageStorageSnapshotPtr & snap_, const WriteLimiterPtr & write_limiter = nullptr);
 
     std::pair<GcEntriesMap, PageSize>
     getEntriesByBlobIds(const std::vector<BlobFileId> & blob_ids) const;
@@ -367,7 +366,7 @@ public:
     /// And we don't restore the entries in blob store, because this PageDirectory is just read only for its entries.
     bool tryDumpSnapshot(const ReadLimiterPtr & read_limiter = nullptr, const WriteLimiterPtr & write_limiter = nullptr, bool force = false);
 
-    void copyCheckpointInfoFromEdit(PageEntriesEdit & edit);
+    //    void copyCheckpointInfoFromEdit(PageEntriesEdit & edit);
 
     // Perform a GC for in-memory entries and return the removed entries.
     // If `return_removed_entries` is false, then just return an empty set.
@@ -376,7 +375,7 @@ public:
         // if true collect the removed entries and return
         bool need_removed_entries = true;
         // collect the valid size of remote ids if not nullptr
-        RemoteFileValidSizes * remote_valid_sizes = nullptr;
+        //        RemoteFileValidSizes * remote_valid_sizes = nullptr;
     };
     PageEntries gcInMemEntries(const InMemGCOption & options);
 

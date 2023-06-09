@@ -154,9 +154,10 @@ void FileProvider::linkEncryptionInfo(const EncryptionPath & src_encryption_path
 
 bool FileProvider::isFileEncrypted(const EncryptionPath & encryption_path_) const
 {
-    auto encryption_info = key_manager->getFile(encryption_path_.full_path);
+    return false;
+    //    auto encryption_info = key_manager->getFile(encryption_path_.full_path);
     // FileEncryptionRes::Disabled means encryption feature has never been enabled, so no file will be encrypted
-    return (encryption_info.res != FileEncryptionRes::Disabled) && (encryption_info.method != EncryptionMethod::Plaintext);
+    //    return (encryption_info.res != FileEncryptionRes::Disabled) && (encryption_info.method != EncryptionMethod::Plaintext);
 }
 
 bool FileProvider::isEncryptionEnabled() const

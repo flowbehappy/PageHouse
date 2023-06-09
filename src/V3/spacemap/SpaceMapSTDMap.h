@@ -14,11 +14,11 @@
 
 #pragma once
 #include <Common/Exception.h>
+#include <Common/shared_ptr_helper.h>
 #include <V3/MapUtils.h>
 #include <V3/spacemap/SpaceMap.h>
 #include <fmt/format.h>
 
-#include <ext/shared_ptr_helper.h>
 #include <map>
 
 namespace DB

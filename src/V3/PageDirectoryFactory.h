@@ -23,8 +23,8 @@
 
 namespace DB
 {
-class PSDiskDelegator;
-using PSDiskDelegatorPtr = std::shared_ptr<PSDiskDelegator>;
+//class PSDiskDelegator;
+//using PSDiskDelegatorPtr = std::shared_ptr<PSDiskDelegator>;
 
 namespace PS::V3
 {

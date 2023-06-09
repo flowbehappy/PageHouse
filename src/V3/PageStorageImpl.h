@@ -17,6 +17,7 @@
 #include <Common/Logger.h>
 #include <Common/Stopwatch.h>
 #include <PageStorage.h>
+#include <PathPool.h>
 #include <Snapshot.h>
 #include <V3/BlobStore.h>
 #include <V3/GCDefines.h>

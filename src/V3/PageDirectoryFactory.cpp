@@ -165,21 +165,21 @@ void PageDirectoryFactory<Trait>::applyRecord(
         }
     }
 
-    if constexpr (std::is_same_v<Trait, universal::FactoryTrait>)
-    {
-        // We only need page id under specific prefix after restart.
-        // If you want to add other prefix here, make sure the page id allocation space is still enough after adding it.
-        if (UniversalPageIdFormat::isType(r.page_id, StorageType::Data)
-            || UniversalPageIdFormat::isType(r.page_id, StorageType::Log)
-            || UniversalPageIdFormat::isType(r.page_id, StorageType::Meta))
-        {
-            dir->max_page_id = std::max(dir->max_page_id, Trait::PageIdTrait::getU64ID(r.page_id));
-        }
-    }
-    else
-    {
-        dir->max_page_id = std::max(dir->max_page_id, Trait::PageIdTrait::getU64ID(r.page_id));
-    }
+    //    if constexpr (std::is_same_v<Trait, universal::FactoryTrait>)
+    //    {
+    //        // We only need page id under specific prefix after restart.
+    //        // If you want to add other prefix here, make sure the page id allocation space is still enough after adding it.
+    //        if (UniversalPageIdFormat::isType(r.page_id, StorageType::Data)
+    //            || UniversalPageIdFormat::isType(r.page_id, StorageType::Log)
+    //            || UniversalPageIdFormat::isType(r.page_id, StorageType::Meta))
+    //        {
+    //            dir->max_page_id = std::max(dir->max_page_id, Trait::PageIdTrait::getU64ID(r.page_id));
+    //        }
+    //    }
+    //    else
+    //    {
+    //        dir->max_page_id = std::max(dir->max_page_id, Trait::PageIdTrait::getU64ID(r.page_id));
+    //    }
 
     const auto & version_list = iter->second;
     const auto & restored_version = r.version;
@@ -214,34 +214,34 @@ void PageDirectoryFactory<Trait>::applyRecord(
         case EditRecordType::PUT:
             version_list->createNewEntry(restored_version, r.entry);
             break;
-        case EditRecordType::UPDATE_DATA_FROM_REMOTE:
-        {
-            auto id_to_resolve = r.page_id;
-            auto sequence_to_resolve = restored_version.sequence;
-            auto version_list_iter = iter;
-            while (true)
-            {
-                const auto & current_version_list = version_list_iter->second;
-                auto [resolve_state, next_id_to_resolve, next_ver_to_resolve] = current_version_list->resolveToPageId(sequence_to_resolve, /*ignore_delete=*/id_to_resolve != r.page_id, nullptr);
-                if (resolve_state == ResolveResult::TO_NORMAL)
-                {
-                    current_version_list->updateLocalCacheForRemotePage(PageVersion(sequence_to_resolve, 0), r.entry);
-                    break;
-                }
-                else if (resolve_state == ResolveResult::TO_REF)
-                {
-                    id_to_resolve = next_id_to_resolve;
-                    sequence_to_resolve = next_ver_to_resolve.sequence;
-                }
-                else
-                {
-                    RUNTIME_CHECK(false);
-                }
-                version_list_iter = dir->mvcc_table_directory.lower_bound(id_to_resolve);
-                assert(version_list_iter != dir->mvcc_table_directory.end());
-            }
-            break;
-        }
+            //        case EditRecordType::UPDATE_DATA_FROM_REMOTE:
+            //        {
+            //            auto id_to_resolve = r.page_id;
+            //            auto sequence_to_resolve = restored_version.sequence;
+            //            auto version_list_iter = iter;
+            //            while (true)
+            //            {
+            //                const auto & current_version_list = version_list_iter->second;
+            //                auto [resolve_state, next_id_to_resolve, next_ver_to_resolve] = current_version_list->resolveToPageId(sequence_to_resolve, /*ignore_delete=*/id_to_resolve != r.page_id, nullptr);
+            //                if (resolve_state == ResolveResult::TO_NORMAL)
+            //                {
+            //                    current_version_list->updateLocalCacheForRemotePage(PageVersion(sequence_to_resolve, 0), r.entry);
+            //                    break;
+            //                }
+            //                else if (resolve_state == ResolveResult::TO_REF)
+            //                {
+            //                    id_to_resolve = next_id_to_resolve;
+            //                    sequence_to_resolve = next_ver_to_resolve.sequence;
+            //                }
+            //                else
+            //                {
+            //                    RUNTIME_CHECK(false);
+            //                }
+            //                version_list_iter = dir->mvcc_table_directory.lower_bound(id_to_resolve);
+            //                assert(version_list_iter != dir->mvcc_table_directory.end());
+            //            }
+            //            break;
+            //        }
         case EditRecordType::DEL:
         case EditRecordType::VAR_DELETE: // nothing different from `DEL`
             version_list->createDelete(restored_version);

@@ -51,10 +51,8 @@ class PathCapacityMetrics;
 using PathCapacityMetricsPtr = std::shared_ptr<PathCapacityMetrics>;
 class PSDiskDelegator;
 using PSDiskDelegatorPtr = std::shared_ptr<PSDiskDelegator>;
-class Context;
-class RegionPersister;
-
-using KeyspaceID = UInt32;
+//class Context;
+//class RegionPersister;
 
 namespace ErrorCodes
 {
@@ -86,8 +84,7 @@ public:
         String name,
         PSDiskDelegatorPtr delegator,
         const PageStorageConfig & config,
-        const FileProviderPtr & file_provider,
-        Context & global_ctx);
+        const FileProviderPtr & file_provider);
 
     PageStorage(
         String name,

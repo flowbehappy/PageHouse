@@ -30,7 +30,7 @@
 #include <V3/WAL/serialize.h>
 #include <V3/WALStore.h>
 #include <WriteBatchImpl.h>
-#include <Storages/PathPool.h>
+#include <PathPool.h>
 #include <Common/logger_useful.h>
 
 #include <cassert>

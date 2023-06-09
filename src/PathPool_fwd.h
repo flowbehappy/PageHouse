@@ -14,12 +14,27 @@
 
 #pragma once
 
-#include <memory>
+#include <Common/Logger.h>
+#include <Common/nocopyable.h>
+#include <Core/Types.h>
+#include <PageDefinesBase.h>
+
+#include <mutex>
+#include <unordered_map>
 
 namespace DB
 {
 
-class UniversalPageStorageService;
-using UniversalPageStorageServicePtr = std::shared_ptr<UniversalPageStorageService>;
+/// A class to manage global paths.
+class PathPool;
+/// A class to manage paths for the specified storage.
+class StoragePathPool;
+
+/// ===== Delegators to StoragePathPool ===== ///
+/// Delegators to StoragePathPool. Use for managing the path of DTFiles.
+class StableDiskDelegator;
+/// Delegators to StoragePathPool. Use by PageStorage for managing the path of PageFiles.
+class PSDiskDelegator;
+using PSDiskDelegatorPtr = std::shared_ptr<PSDiskDelegator>;
 
 } // namespace DB

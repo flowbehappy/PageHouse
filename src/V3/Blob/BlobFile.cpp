@@ -14,8 +14,8 @@
 
 #include <Encryption/WriteReadableFile.h>
 #include <PageUtil.h>
+#include <PathPool.h>
 #include <V3/Blob/BlobFile.h>
-#include <Storages/PathPool.h>
 
 namespace DB
 {

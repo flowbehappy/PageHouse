@@ -82,8 +82,8 @@ createReadBufferFromFileBaseByFileProvider(
         return std::make_unique<FramedChecksumReadBuffer<Digest::CRC64>>(file, allocation_size);
     case ChecksumAlgo::City128:
         return std::make_unique<FramedChecksumReadBuffer<Digest::City128>>(file, allocation_size);
-    case ChecksumAlgo::XXH3:
-        return std::make_unique<FramedChecksumReadBuffer<Digest::XXH3>>(file, allocation_size);
+//    case ChecksumAlgo::XXH3:
+//        return std::make_unique<FramedChecksumReadBuffer<Digest::XXH3>>(file, allocation_size);
     }
     throw Exception("error creating framed checksum buffer instance: checksum unrecognized");
 }

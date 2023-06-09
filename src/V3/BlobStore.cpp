@@ -20,8 +20,12 @@
 #include <Common/Stopwatch.h>
 #include <Common/TiFlashMetrics.h>
 #include <Common/formatReadable.h>
-#include <Poco/File.h>
+#include <Common/logger_useful.h>
+#include <Common/scope_guard.h>
+#include <Common/string_split.h>
 #include <FileUsage.h>
+#include <PathPool.h>
+#include <Poco/File.h>
 #include <V3/Blob/GCInfo.h>
 #include <V3/BlobStore.h>
 #include <V3/PageDefines.h>
@@ -30,11 +34,7 @@
 #include <V3/PageEntry.h>
 #include <V3/Universal/UniversalWriteBatchImpl.h>
 #include <WriteBatchImpl.h>
-#include <Storages/PathPool.h>
-#include <boost_wrapper/string_split.h>
-#include <Common/logger_useful.h>
 
-#include <ext/scope_guard.h>
 #include <iterator>
 #include <magic_enum.hpp>
 #include <unordered_map>
@@ -105,7 +105,7 @@ void BlobStore<Trait>::registerPaths()
                 auto blob_size = blob.getSize();
                 delegator->addPageFileUsedSize({blob_id, 0}, blob_size, path, true);
                 blob_stats.createStatNotChecking(blob_id,
-                                                 std::max(blob_size, config.file_limit_size.get()),
+                                                 std::max(blob_size, config.file_limit_size),
                                                  lock_stats);
             }
             else
@@ -173,83 +173,83 @@ BlobStore<Trait>::handleLargeWrite(typename Trait::WriteBatch & wb, const WriteL
         switch (write.type)
         {
         case WriteBatchWriteType::PUT:
-        case WriteBatchWriteType::UPDATE_DATA_FROM_REMOTE:
-        {
-            ChecksumClass digest;
-            PageEntryV3 entry;
-
-            auto [blob_id, offset_in_file] = getPosFromStats(write.size);
-
-            entry.file_id = blob_id;
-            entry.size = write.size;
-            entry.tag = write.tag;
-            entry.offset = offset_in_file;
-            // padding size won't work on big write batch
-            entry.padded_size = 0;
-
-            BufferBase::Buffer data_buf = write.read_buffer->buffer();
-
-            digest.update(data_buf.begin(), write.size);
-            entry.checksum = digest.checksum();
-
-            UInt64 field_begin, field_end;
-
-            for (size_t i = 0; i < write.offsets.size(); ++i)
-            {
-                ChecksumClass field_digest;
-                field_begin = write.offsets[i].first;
-                field_end = (i == write.offsets.size() - 1) ? write.size : write.offsets[i + 1].first;
-
-                field_digest.update(data_buf.begin() + field_begin, field_end - field_begin);
-                write.offsets[i].second = field_digest.checksum();
-            }
-
-            if (!write.offsets.empty())
-            {
-                // we can swap from WriteBatch instead of copying
-                entry.field_offsets.swap(write.offsets);
-            }
-
-            try
-            {
-                auto blob_file = getBlobFile(blob_id);
-                blob_file->write(data_buf.begin(), offset_in_file, write.size, write_limiter);
-            }
-            catch (DB::Exception & e)
-            {
-                removePosFromStats(blob_id, offset_in_file, write.size);
-                LOG_ERROR(log, "[blob_id={}] [offset_in_file={}] [size={}] write failed.", blob_id, offset_in_file, write.size);
-                throw e;
-            }
-            if (write.type == WriteBatchWriteType::PUT)
-            {
-                edit.put(wb.getFullPageId(write.page_id), entry);
-            }
-            else
-            {
-                edit.updateRemote(wb.getFullPageId(write.page_id), entry);
-            }
-
-            break;
-        }
-        case WriteBatchWriteType::PUT_REMOTE:
-        {
-            PageEntryV3 entry;
-            entry.file_id = INVALID_BLOBFILE_ID;
-            entry.size = write.size;
-            entry.tag = write.tag;
-            entry.checkpoint_info = OptionalCheckpointInfo{
-                .data_location = *write.data_location,
-                .is_valid = true,
-                .is_local_data_reclaimed = true,
-            };
-            if (!write.offsets.empty())
-            {
-                entry.field_offsets.swap(write.offsets);
-            }
-            edit.put(wb.getFullPageId(write.page_id), entry);
-            break;
-        }
+            //        case WriteBatchWriteType::UPDATE_DATA_FROM_REMOTE:
+            //        {
+            //            ChecksumClass digest;
+            //            PageEntryV3 entry;
+            //
+            //            auto [blob_id, offset_in_file] = getPosFromStats(write.size);
+            //
+            //            entry.file_id = blob_id;
+            //            entry.size = write.size;
+            //            entry.tag = write.tag;
+            //            entry.offset = offset_in_file;
+            //            // padding size won't work on big write batch
+            //            entry.padded_size = 0;
+            //
+            //            BufferBase::Buffer data_buf = write.read_buffer->buffer();
+            //
+            //            digest.update(data_buf.begin(), write.size);
+            //            entry.checksum = digest.checksum();
+            //
+            //            UInt64 field_begin, field_end;
+            //
+            //            for (size_t i = 0; i < write.offsets.size(); ++i)
+            //            {
+            //                ChecksumClass field_digest;
+            //                field_begin = write.offsets[i].first;
+            //                field_end = (i == write.offsets.size() - 1) ? write.size : write.offsets[i + 1].first;
+            //
+            //                field_digest.update(data_buf.begin() + field_begin, field_end - field_begin);
+            //                write.offsets[i].second = field_digest.checksum();
+            //            }
+            //
+            //            if (!write.offsets.empty())
+            //            {
+            //                // we can swap from WriteBatch instead of copying
+            //                entry.field_offsets.swap(write.offsets);
+            //            }
+            //
+            //            try
+            //            {
+            //                auto blob_file = getBlobFile(blob_id);
+            //                blob_file->write(data_buf.begin(), offset_in_file, write.size, write_limiter);
+            //            }
+            //            catch (DB::Exception & e)
+            //            {
+            //                removePosFromStats(blob_id, offset_in_file, write.size);
+            //                LOG_ERROR(log, "[blob_id={}] [offset_in_file={}] [size={}] write failed.", blob_id, offset_in_file, write.size);
+            //                throw e;
+            //            }
+            //            if (write.type == WriteBatchWriteType::PUT)
+            //            {
+            //                edit.put(wb.getFullPageId(write.page_id), entry);
+            //            }
+            //            else
+            //            {
+            //                edit.updateRemote(wb.getFullPageId(write.page_id), entry);
+            //            }
+            //
+            //            break;
+            //        }
+            //        case WriteBatchWriteType::PUT_REMOTE:
+            //        {
+            //            PageEntryV3 entry;
+            //            entry.file_id = INVALID_BLOBFILE_ID;
+            //            entry.size = write.size;
+            //            entry.tag = write.tag;
+            //            entry.checkpoint_info = OptionalCheckpointInfo{
+            //                .data_location = *write.data_location,
+            //                .is_valid = true,
+            //                .is_local_data_reclaimed = true,
+            //            };
+            //            if (!write.offsets.empty())
+            //            {
+            //                entry.field_offsets.swap(write.offsets);
+            //            }
+            //            edit.put(wb.getFullPageId(write.page_id), entry);
+            //            break;
+            //        }
         case WriteBatchWriteType::DEL:
         {
             edit.del(wb.getFullPageId(write.page_id));
@@ -263,14 +263,14 @@ BlobStore<Trait>::handleLargeWrite(typename Trait::WriteBatch & wb, const WriteL
         case WriteBatchWriteType::PUT_EXTERNAL:
         {
             PageEntryV3 entry;
-            if (write.data_location.has_value())
-            {
-                entry.checkpoint_info = OptionalCheckpointInfo{
-                    .data_location = *write.data_location,
-                    .is_valid = true,
-                    .is_local_data_reclaimed = true,
-                };
-            }
+            //            if (write.data_location.has_value())
+            //            {
+            //                entry.checkpoint_info = OptionalCheckpointInfo{
+            //                    .data_location = *write.data_location,
+            //                    .is_valid = true,
+            //                    .is_local_data_reclaimed = true,
+            //                };
+            //            }
             edit.putExternal(wb.getFullPageId(write.page_id), entry);
             break;
         }
@@ -300,24 +300,24 @@ BlobStore<Trait>::write(typename Trait::WriteBatch && wb, const WriteLimiterPtr 
         {
             switch (write.type)
             {
-            case WriteBatchWriteType::PUT_REMOTE:
-            {
-                PageEntryV3 entry;
-                entry.file_id = INVALID_BLOBFILE_ID;
-                entry.size = write.size;
-                entry.tag = write.tag;
-                entry.checkpoint_info = OptionalCheckpointInfo{
-                    .data_location = *write.data_location,
-                    .is_valid = true,
-                    .is_local_data_reclaimed = true,
-                };
-                if (!write.offsets.empty())
-                {
-                    entry.field_offsets.swap(write.offsets);
-                }
-                edit.put(wb.getFullPageId(write.page_id), entry);
-                break;
-            }
+                //            case WriteBatchWriteType::PUT_REMOTE:
+                //            {
+                //                PageEntryV3 entry;
+                //                entry.file_id = INVALID_BLOBFILE_ID;
+                //                entry.size = write.size;
+                //                entry.tag = write.tag;
+                //                entry.checkpoint_info = OptionalCheckpointInfo{
+                //                    .data_location = *write.data_location,
+                //                    .is_valid = true,
+                //                    .is_local_data_reclaimed = true,
+                //                };
+                //                if (!write.offsets.empty())
+                //                {
+                //                    entry.field_offsets.swap(write.offsets);
+                //                }
+                //                edit.put(wb.getFullPageId(write.page_id), entry);
+                //                break;
+                //            }
             case WriteBatchWriteType::DEL:
             {
                 edit.del(wb.getFullPageId(write.page_id));
@@ -331,20 +331,20 @@ BlobStore<Trait>::write(typename Trait::WriteBatch && wb, const WriteLimiterPtr 
             case WriteBatchWriteType::PUT_EXTERNAL:
             {
                 PageEntryV3 entry;
-                if (write.data_location.has_value())
-                {
-                    entry.checkpoint_info = OptionalCheckpointInfo{
-                        .data_location = *write.data_location,
-                        .is_valid = true,
-                        .is_local_data_reclaimed = true,
-                    };
-                }
+                //                                if (write.data_location.has_value())
+                //                                {
+                //                                    entry.checkpoint_info = OptionalCheckpointInfo{
+                //                                        .data_location = *write.data_location,
+                //                                        .is_valid = true,
+                //                                        .is_local_data_reclaimed = true,
+                //                                    };
+                //                                }
                 edit.putExternal(wb.getFullPageId(write.page_id), entry);
                 break;
             }
             case WriteBatchWriteType::PUT:
             case WriteBatchWriteType::UPSERT:
-            case WriteBatchWriteType::UPDATE_DATA_FROM_REMOTE:
+                //            case WriteBatchWriteType::UPDATE_DATA_FROM_REMOTE:
                 throw Exception(ErrorCodes::LOGICAL_ERROR, "write batch have a invalid total size == 0 while this kind of entry exist, write_type={}", magic_enum::enum_name(write.type));
                 break;
             }
@@ -352,7 +352,7 @@ BlobStore<Trait>::write(typename Trait::WriteBatch && wb, const WriteLimiterPtr 
         return edit;
     }
 
-    GET_METRIC(tiflash_storage_page_write_batch_size).Observe(all_page_data_size);
+    //    GET_METRIC(tiflash_storage_page_write_batch_size).Observe(all_page_data_size);
 
     // If the WriteBatch is too big, we will split the Writes in the WriteBatch to different `BlobFile`.
     // This can avoid allocating a big buffer for writing data and can smooth memory usage.
@@ -385,75 +385,75 @@ BlobStore<Trait>::write(typename Trait::WriteBatch && wb, const WriteLimiterPtr 
         switch (write.type)
         {
         case WriteBatchWriteType::PUT:
-        case WriteBatchWriteType::UPDATE_DATA_FROM_REMOTE:
-        {
-            ChecksumClass digest;
-            PageEntryV3 entry;
-
-            write.read_buffer->readStrict(buffer_pos, write.size);
-
-            entry.file_id = blob_id;
-            entry.size = write.size;
-            entry.tag = write.tag;
-            entry.offset = offset_in_file + offset_in_allocated;
-            offset_in_allocated += write.size;
-
-            // The last put write
-            if (offset_in_allocated == all_page_data_size)
+            //        case WriteBatchWriteType::UPDATE_DATA_FROM_REMOTE:
             {
-                entry.padded_size = replenish_size;
-            }
+                ChecksumClass digest;
+                PageEntryV3 entry;
 
-            digest.update(buffer_pos, write.size);
-            entry.checksum = digest.checksum();
+                write.read_buffer->readStrict(buffer_pos, write.size);
 
-            UInt64 field_begin, field_end;
+                entry.file_id = blob_id;
+                entry.size = write.size;
+                entry.tag = write.tag;
+                entry.offset = offset_in_file + offset_in_allocated;
+                offset_in_allocated += write.size;
 
-            for (size_t i = 0; i < write.offsets.size(); ++i)
-            {
-                ChecksumClass field_digest;
-                field_begin = write.offsets[i].first;
-                field_end = (i == write.offsets.size() - 1) ? write.size : write.offsets[i + 1].first;
+                // The last put write
+                if (offset_in_allocated == all_page_data_size)
+                {
+                    entry.padded_size = replenish_size;
+                }
 
-                field_digest.update(buffer_pos + field_begin, field_end - field_begin);
-                write.offsets[i].second = field_digest.checksum();
-            }
+                digest.update(buffer_pos, write.size);
+                entry.checksum = digest.checksum();
 
-            if (!write.offsets.empty())
-            {
-                // we can swap from WriteBatch instead of copying
-                entry.field_offsets.swap(write.offsets);
-            }
+                UInt64 field_begin, field_end;
 
-            buffer_pos += write.size;
-            if (write.type == WriteBatchWriteType::PUT)
-            {
-                edit.put(wb.getFullPageId(write.page_id), entry);
+                for (size_t i = 0; i < write.offsets.size(); ++i)
+                {
+                    ChecksumClass field_digest;
+                    field_begin = write.offsets[i].first;
+                    field_end = (i == write.offsets.size() - 1) ? write.size : write.offsets[i + 1].first;
+
+                    field_digest.update(buffer_pos + field_begin, field_end - field_begin);
+                    write.offsets[i].second = field_digest.checksum();
+                }
+
+                if (!write.offsets.empty())
+                {
+                    // we can swap from WriteBatch instead of copying
+                    entry.field_offsets.swap(write.offsets);
+                }
+
+                buffer_pos += write.size;
+                if (write.type == WriteBatchWriteType::PUT)
+                {
+                    edit.put(wb.getFullPageId(write.page_id), entry);
+                }
+                else
+                {
+                    edit.updateRemote(wb.getFullPageId(write.page_id), entry);
+                }
+                break;
             }
-            else
-            {
-                edit.updateRemote(wb.getFullPageId(write.page_id), entry);
-            }
-            break;
-        }
-        case WriteBatchWriteType::PUT_REMOTE:
-        {
-            PageEntryV3 entry;
-            entry.file_id = INVALID_BLOBFILE_ID;
-            entry.size = write.size;
-            entry.tag = write.tag;
-            entry.checkpoint_info = OptionalCheckpointInfo{
-                .data_location = *write.data_location,
-                .is_valid = true,
-                .is_local_data_reclaimed = true,
-            };
-            if (!write.offsets.empty())
-            {
-                entry.field_offsets.swap(write.offsets);
-            }
-            edit.put(wb.getFullPageId(write.page_id), entry);
-            break;
-        }
+            //        case WriteBatchWriteType::PUT_REMOTE:
+            //        {
+            //            PageEntryV3 entry;
+            //            entry.file_id = INVALID_BLOBFILE_ID;
+            //            entry.size = write.size;
+            //            entry.tag = write.tag;
+            //            entry.checkpoint_info = OptionalCheckpointInfo{
+            //                .data_location = *write.data_location,
+            //                .is_valid = true,
+            //                .is_local_data_reclaimed = true,
+            //            };
+            //            if (!write.offsets.empty())
+            //            {
+            //                entry.field_offsets.swap(write.offsets);
+            //            }
+            //            edit.put(wb.getFullPageId(write.page_id), entry);
+            //            break;
+            //        }
         case WriteBatchWriteType::DEL:
         {
             edit.del(wb.getFullPageId(write.page_id));
@@ -467,14 +467,14 @@ BlobStore<Trait>::write(typename Trait::WriteBatch && wb, const WriteLimiterPtr 
         case WriteBatchWriteType::PUT_EXTERNAL:
         {
             PageEntryV3 entry;
-            if (write.data_location.has_value())
-            {
-                entry.checkpoint_info = OptionalCheckpointInfo{
-                    .data_location = *write.data_location,
-                    .is_valid = true,
-                    .is_local_data_reclaimed = true,
-                };
-            }
+            //            if (write.data_location.has_value())
+            //            {
+            //                entry.checkpoint_info = OptionalCheckpointInfo{
+            //                    .data_location = *write.data_location,
+            //                    .is_valid = true,
+            //                    .is_local_data_reclaimed = true,
+            //                };
+            //            }
             edit.putExternal(wb.getFullPageId(write.page_id), entry);
             break;
         }
@@ -498,10 +498,10 @@ BlobStore<Trait>::write(typename Trait::WriteBatch && wb, const WriteLimiterPtr 
 
     try
     {
-        Stopwatch watch;
-        SCOPE_EXIT({
-            GET_METRIC(tiflash_storage_page_write_duration_seconds, type_blob_write).Observe(watch.elapsedSeconds());
-        });
+        //        Stopwatch watch;
+        //        SCOPE_EXIT({
+        //            GET_METRIC(tiflash_storage_page_write_duration_seconds, type_blob_write).Observe(watch.elapsedSeconds());
+        //        });
         auto blob_file = getBlobFile(blob_id);
         blob_file->write(buffer, offset_in_file, all_page_data_size, write_limiter);
     }
@@ -523,7 +523,7 @@ void BlobStore<Trait>::remove(const PageEntries & del_entries)
     {
         if (entry.file_id == INVALID_BLOBFILE_ID)
         {
-            RUNTIME_CHECK(entry.checkpoint_info.has_value() && entry.checkpoint_info.is_local_data_reclaimed);
+            //            RUNTIME_CHECK(entry.checkpoint_info.has_value() && entry.checkpoint_info.is_local_data_reclaimed);
             continue;
         }
         blob_updated.insert(entry.file_id);
@@ -572,7 +572,7 @@ void BlobStore<Trait>::remove(const PageEntries & del_entries)
 template <typename Trait>
 std::pair<BlobFileId, BlobFileOffset> BlobStore<Trait>::getPosFromStats(size_t size)
 {
-    Stopwatch watch;
+    //    Stopwatch watch;
     BlobStatPtr stat;
 
     auto lock_stat = [size, this, &stat]() {
@@ -583,7 +583,7 @@ std::pair<BlobFileId, BlobFileOffset> BlobStore<Trait>::getPosFromStats(size_t s
         {
             // No valid stat for putting data with `size`, create a new one
             stat = blob_stats.createStat(blob_file_id,
-                                         std::max(size, config.file_limit_size.get()),
+                                         std::max(size, config.file_limit_size),
                                          lock_stats);
         }
 
@@ -593,11 +593,11 @@ std::pair<BlobFileId, BlobFileOffset> BlobStore<Trait>::getPosFromStats(size_t s
         // and throwing exception.
         return stat->lock();
     }();
-    GET_METRIC(tiflash_storage_page_write_duration_seconds, type_choose_stat).Observe(watch.elapsedSeconds());
-    watch.restart();
-    SCOPE_EXIT({
-        GET_METRIC(tiflash_storage_page_write_duration_seconds, type_search_pos).Observe(watch.elapsedSeconds());
-    });
+    //    GET_METRIC(tiflash_storage_page_write_duration_seconds, type_choose_stat).Observe(watch.elapsedSeconds());
+    //    watch.restart();
+    //    SCOPE_EXIT({
+    //        GET_METRIC(tiflash_storage_page_write_duration_seconds, type_search_pos).Observe(watch.elapsedSeconds());
+    //    });
 
     // We need to assume that this insert will reduce max_cap.
     // Because other threads may also be waiting for BlobStats to chooseStat during this time.
@@ -1150,7 +1150,7 @@ BlobStore<Trait>::gc(GcEntriesMap & entries_need_gc,
         }
     };
 
-    auto alloc_size = config.file_limit_size.get();
+    auto alloc_size = config.file_limit_size;
     // If `total_page_size` is greater than `config_file_limit`, we will try to write the page data into multiple `BlobFile`s to
     // make the memory consumption smooth during GC.
     if (total_page_size > alloc_size)

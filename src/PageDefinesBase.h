@@ -25,6 +25,10 @@
 
 namespace DB
 {
+
+using KeyspaceID = UInt32;
+static const KeyspaceID NullspaceID = 0xffffffff;
+
 using Clock = std::chrono::system_clock;
 using Seconds = std::chrono::seconds;
 

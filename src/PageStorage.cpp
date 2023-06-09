@@ -30,8 +30,7 @@ PageStoragePtr PageStorage::create(
     String name,
     PSDiskDelegatorPtr delegator,
     const PageStorageConfig & config,
-    const FileProviderPtr & file_provider,
-    Context & global_ctx)
+    const FileProviderPtr & file_provider)
 {
     return std::make_shared<PS::V3::PageStorageImpl>(name, delegator, config, file_provider);
 }

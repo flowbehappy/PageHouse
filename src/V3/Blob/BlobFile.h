@@ -17,10 +17,10 @@
 #include <Core/Types.h>
 #include <Encryption/FileProvider.h>
 #include <Encryption/WriteReadableFile.h>
+#include <FormatVersion.h>
+#include <PathPool_fwd.h>
 #include <Poco/Logger.h>
-#include <Storages/FormatVersion.h>
 #include <V3/PageDefines.h>
-#include <Storages/PathPool_fwd.h>
 
 namespace DB::PS::V3
 {

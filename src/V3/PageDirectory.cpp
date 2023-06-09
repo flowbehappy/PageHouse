@@ -19,6 +19,7 @@
 #include <Common/SyncPoint/SyncPoint.h>
 #include <Common/TiFlashMetrics.h>
 #include <Common/assert_cast.h>
+#include <Common/logger_useful.h>
 #include <V3/MapUtils.h>
 #include <V3/PageDefines.h>
 #include <V3/PageDirectory.h>
@@ -29,7 +30,6 @@
 #include <V3/WAL/serialize.h>
 #include <V3/WALStore.h>
 #include <WriteBatchImpl.h>
-#include <Common/logger_useful.h>
 
 #include <magic_enum.hpp>
 #include <memory>
@@ -298,33 +298,33 @@ void VersionedPageEntries<Trait>::createDelete(const PageVersion & ver)
         toDebugString()));
 }
 
-template <typename Trait>
-bool VersionedPageEntries<Trait>::updateLocalCacheForRemotePage(const PageVersion & ver, const PageEntryV3 & entry)
-{
-    auto page_lock = acquireLock();
-    if (type == EditRecordType::VAR_ENTRY)
-    {
-        auto last_iter = MapUtils::findMutLess(entries, PageVersion(ver.sequence + 1, 0));
-        RUNTIME_CHECK(last_iter != entries.end() && last_iter->second.isEntry());
-        auto & ori_entry = last_iter->second.entry;
-        RUNTIME_CHECK(ori_entry.checkpoint_info.has_value());
-        if (!ori_entry.checkpoint_info.is_local_data_reclaimed)
-        {
-            return false;
-        }
-        ori_entry.file_id = entry.file_id;
-        ori_entry.size = entry.size;
-        ori_entry.offset = entry.offset;
-        ori_entry.checksum = entry.checksum;
-        ori_entry.checkpoint_info.is_local_data_reclaimed = false;
-        return true;
-    }
-    throw Exception(fmt::format(
-        "try to update remote page with invalid state "
-        "[ver={}] [state={}]",
-        ver,
-        toDebugString()));
-}
+//template <typename Trait>
+//bool VersionedPageEntries<Trait>::updateLocalCacheForRemotePage(const PageVersion & ver, const PageEntryV3 & entry)
+//{
+//    auto page_lock = acquireLock();
+//    if (type == EditRecordType::VAR_ENTRY)
+//    {
+//        auto last_iter = MapUtils::findMutLess(entries, PageVersion(ver.sequence + 1, 0));
+//        RUNTIME_CHECK(last_iter != entries.end() && last_iter->second.isEntry());
+//        auto & ori_entry = last_iter->second.entry;
+//        RUNTIME_CHECK(ori_entry.checkpoint_info.has_value());
+//        if (!ori_entry.checkpoint_info.is_local_data_reclaimed)
+//        {
+//            return false;
+//        }
+//        ori_entry.file_id = entry.file_id;
+//        ori_entry.size = entry.size;
+//        ori_entry.offset = entry.offset;
+//        ori_entry.checksum = entry.checksum;
+//        ori_entry.checkpoint_info.is_local_data_reclaimed = false;
+//        return true;
+//    }
+//    throw Exception(fmt::format(
+//        "try to update remote page with invalid state "
+//        "[ver={}] [state={}]",
+//        ver,
+//        toDebugString()));
+//}
 
 // Create a new reference version with version=`ver` and `ori_page_id_`.
 // If create success, then return true, otherwise return false.
@@ -522,54 +522,54 @@ std::optional<PageEntryV3> VersionedPageEntries<Trait>::getLastEntry(std::option
     return std::nullopt;
 }
 
-template <typename Trait>
-void VersionedPageEntries<Trait>::copyCheckpointInfoFromEdit(const typename PageEntriesEdit::EditRecord & edit)
-{
-    // We have a running PageStorage instance, and did a checkpoint dump. The checkpoint dump is encoded using
-    // PageEntriesEdit. During the checkpoint dump, this function is invoked so that we can write back where
-    // (the checkpoint info) each page's data was dumped.
-    // In this case, there is a living snapshot protecting the data.
-
-    // Pre-check: All ENTRY edit record must contain checkpoint info for copying.
-    RUNTIME_CHECK(edit.type == EditRecordType::VAR_ENTRY);
-    RUNTIME_CHECK(edit.entry.checkpoint_info.has_value());
-
-    auto page_lock = acquireLock();
-
-    if (type != EditRecordType::VAR_ENTRY)
-    {
-        // For example, Put X -> Delete X -> dumpSnapshotToEdit -> Full GC -> Delete X -> copyCheckpointInfoFromEdit.
-        // In this case, we have X=VAR_ENTRY in the `edit`, but will get X=VAR_DELETE in the page directory.
-        return;
-    }
-
-    // Due to GC movement, (sequence, epoch) may be changed to (sequence, epoch+x), so
-    // we search within [  (sequence, 0),  (sequence+1, 0)  ), and assign checkpoint info for all of it.
-    auto iter = MapUtils::findMutLess(entries, PageVersion(edit.version.sequence + 1));
-    if (iter == entries.end())
-    {
-        // The referenced version may be GCed so that we cannot find any matching entry.
-        return;
-    }
-
-    // TODO: Not sure if there is a full GC this may be false? Let's keep it here for now.
-    RUNTIME_CHECK(
-        iter->first.sequence == edit.version.sequence,
-        iter->first.sequence,
-        edit.version.sequence);
-
-    // Discard epoch, and only check sequence.
-    while (iter->first.sequence == edit.version.sequence)
-    {
-        // We will never meet the same Version mapping to one entry and one delete, so let's verify it is an entry.
-        RUNTIME_CHECK(iter->second.isEntry());
-        iter->second.entry.checkpoint_info = edit.entry.checkpoint_info;
-
-        if (iter == entries.begin())
-            break;
-        --iter;
-    }
-}
+//template <typename Trait>
+//void VersionedPageEntries<Trait>::copyCheckpointInfoFromEdit(const typename PageEntriesEdit::EditRecord & edit)
+//{
+//    // We have a running PageStorage instance, and did a checkpoint dump. The checkpoint dump is encoded using
+//    // PageEntriesEdit. During the checkpoint dump, this function is invoked so that we can write back where
+//    // (the checkpoint info) each page's data was dumped.
+//    // In this case, there is a living snapshot protecting the data.
+//
+//    // Pre-check: All ENTRY edit record must contain checkpoint info for copying.
+//    RUNTIME_CHECK(edit.type == EditRecordType::VAR_ENTRY);
+//    RUNTIME_CHECK(edit.entry.checkpoint_info.has_value());
+//
+//    auto page_lock = acquireLock();
+//
+//    if (type != EditRecordType::VAR_ENTRY)
+//    {
+//        // For example, Put X -> Delete X -> dumpSnapshotToEdit -> Full GC -> Delete X -> copyCheckpointInfoFromEdit.
+//        // In this case, we have X=VAR_ENTRY in the `edit`, but will get X=VAR_DELETE in the page directory.
+//        return;
+//    }
+//
+//    // Due to GC movement, (sequence, epoch) may be changed to (sequence, epoch+x), so
+//    // we search within [  (sequence, 0),  (sequence+1, 0)  ), and assign checkpoint info for all of it.
+//    auto iter = MapUtils::findMutLess(entries, PageVersion(edit.version.sequence + 1));
+//    if (iter == entries.end())
+//    {
+//        // The referenced version may be GCed so that we cannot find any matching entry.
+//        return;
+//    }
+//
+//    // TODO: Not sure if there is a full GC this may be false? Let's keep it here for now.
+//    RUNTIME_CHECK(
+//        iter->first.sequence == edit.version.sequence,
+//        iter->first.sequence,
+//        edit.version.sequence);
+//
+//    // Discard epoch, and only check sequence.
+//    while (iter->first.sequence == edit.version.sequence)
+//    {
+//        // We will never meet the same Version mapping to one entry and one delete, so let's verify it is an entry.
+//        RUNTIME_CHECK(iter->second.isEntry());
+//        iter->second.entry.checkpoint_info = edit.entry.checkpoint_info;
+//
+//        if (iter == entries.begin())
+//            break;
+//        --iter;
+//    }
+//}
 
 // Returns true when **this id** is "visible" by `seq`.
 // If this page id is marked as deleted or not created, it is "not visible".
@@ -699,7 +699,6 @@ bool VersionedPageEntries<Trait>::cleanOutdatedEntries(
     UInt64 lowest_seq,
     std::map<PageId, std::pair<PageVersion, Int64>> * normal_entries_to_deref,
     PageEntriesV3 * entries_removed,
-    RemoteFileValidSizes * remote_file_sizes,
     const PageLock & /*page_lock*/)
 {
     if (type == EditRecordType::VAR_EXTERNAL)
@@ -755,21 +754,21 @@ bool VersionedPageEntries<Trait>::cleanOutdatedEntries(
     bool last_entry_is_delete = !iter->second.isEntry();
     --iter; // keep the first version less than <lowest_seq+1, 0>
 
-    if (remote_file_sizes)
-    {
-        // the entries after `iter` are valid, collect the remote info size for remote GC
-        for (auto valid_iter = iter; valid_iter != entries.end(); ++valid_iter)
-        {
-            if (!valid_iter->second.isEntry())
-                continue;
-            auto entry = valid_iter->second.entry;
-            if (!entry.checkpoint_info.has_value())
-                continue;
-            const auto & file_id = *entry.checkpoint_info.data_location.data_file_id;
-            auto file_size_iter = remote_file_sizes->try_emplace(file_id, 0);
-            file_size_iter.first->second += entry.checkpoint_info.data_location.size_in_file;
-        }
-    }
+    //    if (remote_file_sizes)
+    //    {
+    //        // the entries after `iter` are valid, collect the remote info size for remote GC
+    //        for (auto valid_iter = iter; valid_iter != entries.end(); ++valid_iter)
+    //        {
+    //            if (!valid_iter->second.isEntry())
+    //                continue;
+    //            auto entry = valid_iter->second.entry;
+    //            if (!entry.checkpoint_info.has_value())
+    //                continue;
+    //            const auto & file_id = *entry.checkpoint_info.data_location.data_file_id;
+    //            auto file_size_iter = remote_file_sizes->try_emplace(file_id, 0);
+    //            file_size_iter.first->second += entry.checkpoint_info.data_location.size_in_file;
+    //        }
+    //    }
 
     while (true)
     {
@@ -862,7 +861,7 @@ bool VersionedPageEntries<Trait>::derefAndClean(
             return false;
         // Clean outdated entries after decreased the ref-counter
         // set `normal_entries_to_deref` to be nullptr to ignore cleaning ref-var-entries
-        return cleanOutdatedEntries(lowest_seq, /*normal_entries_to_deref*/ nullptr, entries_removed, /*remote_file_sizes*/ nullptr, page_lock);
+        return cleanOutdatedEntries(lowest_seq, /*normal_entries_to_deref*/ nullptr, entries_removed, page_lock);
     }
 
     throw Exception(fmt::format("calling derefAndClean with invalid state [state={}]", toDebugString()));
@@ -1482,12 +1481,12 @@ std::unordered_set<String> PageDirectory<Trait>::apply(PageEntriesEdit && edit, 
     Stopwatch watch;
     std::unique_lock apply_lock(apply_mutex);
 
-    GET_METRIC(tiflash_storage_page_write_duration_seconds, type_latch).Observe(watch.elapsedSeconds());
+    //    GET_METRIC(tiflash_storage_page_write_duration_seconds, type_latch).Observe(watch.elapsedSeconds());
     watch.restart();
 
     writers.push_back(&w);
     w.cv.wait(apply_lock, [&] { return w.done || &w == writers.front(); });
-    GET_METRIC(tiflash_storage_page_write_duration_seconds, type_wait_in_group).Observe(watch.elapsedSeconds());
+    //    GET_METRIC(tiflash_storage_page_write_duration_seconds, type_wait_in_group).Observe(watch.elapsedSeconds());
     watch.restart();
     if (w.done)
     {
@@ -1552,9 +1551,9 @@ std::unordered_set<String> PageDirectory<Trait>::apply(PageEntriesEdit && edit, 
     }
 
     wal->apply(Trait::Serializer::serializeTo(edit), write_limiter);
-    GET_METRIC(tiflash_storage_page_write_duration_seconds, type_wal).Observe(watch.elapsedSeconds());
+    //    GET_METRIC(tiflash_storage_page_write_duration_seconds, type_wal).Observe(watch.elapsedSeconds());
     watch.restart();
-    SCOPE_EXIT({ GET_METRIC(tiflash_storage_page_write_duration_seconds, type_commit).Observe(watch.elapsedSeconds()); });
+    //    SCOPE_EXIT({ GET_METRIC(tiflash_storage_page_write_duration_seconds, type_commit).Observe(watch.elapsedSeconds()); });
 
     std::unordered_set<String> applied_data_files;
     {
@@ -1605,10 +1604,10 @@ std::unordered_set<String> PageDirectory<Trait>::apply(PageEntriesEdit && edit, 
                 }
 
                 // collect the applied remote data_file_ids
-                if (r.entry.checkpoint_info.has_value())
-                {
-                    applied_data_files.emplace(*r.entry.checkpoint_info.data_location.data_file_id);
-                }
+                //                if (r.entry.checkpoint_info.has_value())
+                //                {
+                //                    applied_data_files.emplace(*r.entry.checkpoint_info.data_location.data_file_id);
+                //                }
             }
             catch (DB::Exception & e)
             {
@@ -1626,52 +1625,52 @@ std::unordered_set<String> PageDirectory<Trait>::apply(PageEntriesEdit && edit, 
     return applied_data_files;
 }
 
-template <typename Trait>
-typename PageDirectory<Trait>::PageEntries PageDirectory<Trait>::updateLocalCacheForRemotePages(PageEntriesEdit && edit, const DB::PageStorageSnapshotPtr & snap_, const WriteLimiterPtr & write_limiter)
-{
-    std::unique_lock apply_lock(apply_mutex);
-    auto seq = toConcreteSnapshot(snap_)->sequence;
-    for (auto & r : edit.getMutRecords())
-    {
-        r.version = PageVersion(seq, 0);
-    }
-    wal->apply(Trait::Serializer::serializeTo(edit), write_limiter);
-    typename PageDirectory<Trait>::PageEntries ignored_entries;
-    {
-        std::unique_lock table_lock(table_rw_mutex);
-
-        for (const auto & r : edit.getRecords())
-        {
-            auto id_to_resolve = r.page_id;
-            auto sequence_to_resolve = seq;
-            while (true)
-            {
-                auto iter = mvcc_table_directory.lower_bound(id_to_resolve);
-                assert(iter != mvcc_table_directory.end());
-                auto & version_list = iter->second;
-                auto [resolve_state, next_id_to_resolve, next_ver_to_resolve] = version_list->resolveToPageId(sequence_to_resolve, /*ignore_delete=*/id_to_resolve != r.page_id, nullptr);
-                if (resolve_state == ResolveResult::TO_NORMAL)
-                {
-                    if (!version_list->updateLocalCacheForRemotePage(PageVersion(sequence_to_resolve, 0), r.entry))
-                    {
-                        ignored_entries.push_back(r.entry);
-                    }
-                    break;
-                }
-                else if (resolve_state == ResolveResult::TO_REF)
-                {
-                    id_to_resolve = next_id_to_resolve;
-                    sequence_to_resolve = next_ver_to_resolve.sequence;
-                }
-                else
-                {
-                    RUNTIME_CHECK(false);
-                }
-            }
-        }
-    }
-    return ignored_entries;
-}
+//template <typename Trait>
+//typename PageDirectory<Trait>::PageEntries PageDirectory<Trait>::updateLocalCacheForRemotePages(PageEntriesEdit && edit, const DB::PageStorageSnapshotPtr & snap_, const WriteLimiterPtr & write_limiter)
+//{
+//    std::unique_lock apply_lock(apply_mutex);
+//    auto seq = toConcreteSnapshot(snap_)->sequence;
+//    for (auto & r : edit.getMutRecords())
+//    {
+//        r.version = PageVersion(seq, 0);
+//    }
+//    wal->apply(Trait::Serializer::serializeTo(edit), write_limiter);
+//    typename PageDirectory<Trait>::PageEntries ignored_entries;
+//    {
+//        std::unique_lock table_lock(table_rw_mutex);
+//
+//        for (const auto & r : edit.getRecords())
+//        {
+//            auto id_to_resolve = r.page_id;
+//            auto sequence_to_resolve = seq;
+//            while (true)
+//            {
+//                auto iter = mvcc_table_directory.lower_bound(id_to_resolve);
+//                assert(iter != mvcc_table_directory.end());
+//                auto & version_list = iter->second;
+//                auto [resolve_state, next_id_to_resolve, next_ver_to_resolve] = version_list->resolveToPageId(sequence_to_resolve, /*ignore_delete=*/id_to_resolve != r.page_id, nullptr);
+//                if (resolve_state == ResolveResult::TO_NORMAL)
+//                {
+//                    if (!version_list->updateLocalCacheForRemotePage(PageVersion(sequence_to_resolve, 0), r.entry))
+//                    {
+//                        ignored_entries.push_back(r.entry);
+//                    }
+//                    break;
+//                }
+//                else if (resolve_state == ResolveResult::TO_REF)
+//                {
+//                    id_to_resolve = next_id_to_resolve;
+//                    sequence_to_resolve = next_ver_to_resolve.sequence;
+//                }
+//                else
+//                {
+//                    RUNTIME_CHECK(false);
+//                }
+//            }
+//        }
+//    }
+//    return ignored_entries;
+//}
 
 template <typename Trait>
 void PageDirectory<Trait>::gcApply(PageEntriesEdit && migrated_edit, const WriteLimiterPtr & write_limiter)
@@ -1865,44 +1864,44 @@ bool PageDirectory<Trait>::tryDumpSnapshot(const ReadLimiterPtr & read_limiter, 
     }
 }
 
-template <typename Trait>
-void PageDirectory<Trait>::copyCheckpointInfoFromEdit(PageEntriesEdit & edit)
-{
-    const auto & records = edit.getRecords();
-    if (records.empty())
-        return;
-
-    // Pre-check: All ENTRY edit record must contain checkpoint info.
-    // We do the pre-check before copying any remote info to avoid partial completion.
-    for (const auto & rec : records)
-    {
-        if (rec.type == EditRecordType::VAR_ENTRY)
-            RUNTIME_CHECK(rec.entry.checkpoint_info.has_value());
-    }
-
-    for (const auto & rec : records)
-    {
-        // Only VAR_ENTRY will contain checkpoint info.
-        if (rec.type != EditRecordType::VAR_ENTRY)
-            continue;
-
-        // TODO: Improve from O(nlogn) to O(n).
-
-        typename MVCCMapType::iterator iter;
-        {
-            std::shared_lock read_lock(table_rw_mutex);
-            iter = mvcc_table_directory.find(rec.page_id);
-            if (iter == mvcc_table_directory.end())
-                // There may be obsolete entries deleted.
-                // For example, if there is a `Put 1` with sequence 10, `Del 1` with sequence 11,
-                // and the snapshot sequence is 12, Page with id 1 may be deleted by the gc process.
-                continue;
-        }
-
-        auto & entries = iter->second;
-        entries->copyCheckpointInfoFromEdit(rec);
-    }
-}
+//template <typename Trait>
+//void PageDirectory<Trait>::copyCheckpointInfoFromEdit(PageEntriesEdit & edit)
+//{
+//    const auto & records = edit.getRecords();
+//    if (records.empty())
+//        return;
+//
+//    // Pre-check: All ENTRY edit record must contain checkpoint info.
+//    // We do the pre-check before copying any remote info to avoid partial completion.
+//    for (const auto & rec : records)
+//    {
+//        if (rec.type == EditRecordType::VAR_ENTRY)
+//            RUNTIME_CHECK(rec.entry.checkpoint_info.has_value());
+//    }
+//
+//    for (const auto & rec : records)
+//    {
+//        // Only VAR_ENTRY will contain checkpoint info.
+//        if (rec.type != EditRecordType::VAR_ENTRY)
+//            continue;
+//
+//        // TODO: Improve from O(nlogn) to O(n).
+//
+//        typename MVCCMapType::iterator iter;
+//        {
+//            std::shared_lock read_lock(table_rw_mutex);
+//            iter = mvcc_table_directory.find(rec.page_id);
+//            if (iter == mvcc_table_directory.end())
+//                // There may be obsolete entries deleted.
+//                // For example, if there is a `Put 1` with sequence 10, `Del 1` with sequence 11,
+//                // and the snapshot sequence is 12, Page with id 1 may be deleted by the gc process.
+//                continue;
+//        }
+//
+//        auto & entries = iter->second;
+//        entries->copyCheckpointInfoFromEdit(rec);
+//    }
+//}
 
 template <typename Trait>
 typename PageDirectory<Trait>::PageEntries PageDirectory<Trait>::gcInMemEntries(const InMemGCOption & options)
@@ -1970,7 +1969,6 @@ typename PageDirectory<Trait>::PageEntries PageDirectory<Trait>::gcInMemEntries(
             lowest_seq,
             &normal_entries_to_deref,
             options.need_removed_entries ? &all_del_entries : nullptr,
-            options.remote_valid_sizes,
             iter->second->acquireLock());
 
         {

@@ -17,18 +17,18 @@
 #include <Common/Stopwatch.h>
 #include <Common/SyncPoint/SyncPoint.h>
 #include <Common/TiFlashMetrics.h>
-#include <Encryption/FileProvider.h>
-#include </PageStorage.h>
-#include </V3/BlobStore.h>
-#include </V3/PageDefines.h>
-#include </V3/PageDirectory.h>
-#include </V3/PageDirectoryFactory.h>
-#include </V3/PageEntriesEdit.h>
-#include </V3/PageStorageImpl.h>
-#include </V3/WAL/WALConfig.h>
-#include </WriteBatchImpl.h>
-#include <Storages/PathPool.h>
 #include <Common/logger_useful.h>
+#include <Encryption/FileProvider.h>
+#include <PageStorage.h>
+#include <PathPool.h>
+#include <V3/BlobStore.h>
+#include <V3/PageDefines.h>
+#include <V3/PageDirectory.h>
+#include <V3/PageDirectoryFactory.h>
+#include <V3/PageEntriesEdit.h>
+#include <V3/PageStorageImpl.h>
+#include <V3/WAL/WALConfig.h>
+#include <WriteBatchImpl.h>
 
 #include <mutex>
 
@@ -131,8 +131,8 @@ void PageStorageImpl::writeImpl(DB::WriteBatch && write_batch, const WriteLimite
     if (unlikely(write_batch.empty()))
         return;
 
-    Stopwatch watch;
-    SCOPE_EXIT({ GET_METRIC(tiflash_storage_page_write_duration_seconds, type_total).Observe(watch.elapsedSeconds()); });
+    //    Stopwatch watch;
+    //    SCOPE_EXIT({ GET_METRIC(tiflash_storage_page_write_duration_seconds, type_total).Observe(watch.elapsedSeconds()); });
 
     // Persist Page data to BlobStore
     auto edit = blob_store.write(std::move(write_batch), write_limiter);
@@ -268,7 +268,7 @@ void PageStorageImpl::traverseImpl(const std::function<void(const DB::Page & pag
 
 bool PageStorageImpl::gcImpl(bool /*not_skip*/, const WriteLimiterPtr & write_limiter, const ReadLimiterPtr & read_limiter)
 {
-    return manager.gc(blob_store, *page_directory, write_limiter, read_limiter, nullptr, log);
+    return manager.gc(blob_store, *page_directory, write_limiter, read_limiter, log);
 }
 
 void PageStorageImpl::registerExternalPagesCallbacks(const ExternalPageCallbacks & callbacks)

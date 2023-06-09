@@ -14,21 +14,15 @@
 
 #pragma once
 
-#include <memory>
-
-namespace DB::PS::V3
+/** Последовательный номер потока, начиная с 1, среди тех потоков, для которых был получен этот номер.
+  * Используется при логгировании.
+  */
+namespace Poco
 {
 
-class CPFilesWriter;
-using CPFilesWriterPtr = std::unique_ptr<CPFilesWriter>;
+namespace ThreadNumber
+{
+    unsigned get();
+}
 
-class CPManifestFileWriter;
-using CPManifestFileWriterPtr = std::unique_ptr<CPManifestFileWriter>;
-
-class CPDataFileWriter;
-using CPDataFileWriterPtr = std::unique_ptr<CPDataFileWriter>;
-
-class CPManifestFileReader;
-using CPManifestFileReaderPtr = std::unique_ptr<CPManifestFileReader>;
-
-} // namespace DB::PS::V3
+}
