@@ -1,7 +1,7 @@
 PageHouse
 ====
 
-An embed Key-Value storage engine. Both key (coded as "PageId") and value (coded as "Page") are arbitrary bytes.
+An embedded Key-Value storage engine. Both key (coded as "PageId") and value (coded as "Page") are arbitrary bytes.
 
 # Key Features
 
