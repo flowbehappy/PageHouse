@@ -4,16 +4,17 @@ if (NOT MSVC)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-old-style-cast")
 endif ()
 
-add_subdirectory (libfiu)
-add_subdirectory (boost-cmake)
-add_subdirectory (lz4-cmake)
+add_subdirectory(libfiu)
+add_subdirectory(boost-cmake)
+add_subdirectory(lz4-cmake)
 
 set (CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-add_subdirectory (zlib-ng)
+add_subdirectory(zlib-ng)
 unset (CMAKE_POLICY_DEFAULT_CMP0077)
 
 add_subdirectory(magic_enum)
-add_subdirectory (libcityhash)
+add_subdirectory(libcityhash)
+add_subdirectory(fmtlib-cmake)
 
 if (USE_INTERNAL_POCO_LIBRARY)
     set (save_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
@@ -39,6 +40,13 @@ if (USE_INTERNAL_POCO_LIBRARY)
 endif ()
 
 add_subdirectory (protobuf-cmake)
+
+SET (BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Disable google-benchmark testing" FORCE)
+SET (BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "Disable google-benchmark testing" FORCE)
+add_subdirectory(benchmark)
+add_subdirectory(googletest)
+add_subdirectory(zstd-cmake)
+add_subdirectory(double-conversion)
 
 if (ENABLE_JEMALLOC AND USE_INTERNAL_JEMALLOC_LIBRARY)
     add_subdirectory (jemalloc-cmake)

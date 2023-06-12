@@ -13,8 +13,10 @@
 // limitations under the License.
 
 #include <Common/SyncPoint/Ctl.h>
-#include <Encryption/MockKeyManager.h>
 #include <Poco/Logger.h>
+#include <TestUtils/MockDiskDelegator.h>
+#include <TestUtils/TiFlashStorageTestBasic.h>
+#include <TestUtils/TiFlashTestEnv.h>
 #include <V3/LogFile/LogFilename.h>
 #include <V3/LogFile/LogFormat.h>
 #include <V3/PageDefines.h>
@@ -26,9 +28,6 @@
 #include <V3/WAL/serialize.h>
 #include <V3/WALStore.h>
 #include <V3/tests/entries_helper.h>
-#include <TestUtils/MockDiskDelegator.h>
-#include <TestUtils/TiFlashStorageTestBasic.h>
-#include <TestUtils/TiFlashTestEnv.h>
 
 #include <future>
 #include <mutex>
@@ -632,216 +631,6 @@ try
         }
         EXPECT_EQ(num_applied_edit, 3);
     }
-}
-CATCH
-
-TEST_P(WALStoreTest, ShareDataFileID)
-try
-{
-    auto provider = DB::tests::TiFlashTestEnv::getDefaultFileProvider();
-    auto path = getTemporaryPath();
-
-    auto [wal, reader] = WALStore::create(getCurrentTestName(), provider, delegator, config);
-    ASSERT_NE(wal, nullptr);
-
-    std::vector<size_t> size_each_edit;
-    // Stage 1. Apply with only remote pages
-    CheckpointLocation location1{
-        .data_file_id = std::make_shared<String>("hhhhh"),
-        .offset_in_file = 100,
-        .size_in_file = 2000,
-    };
-    PageEntryV3 entry_p1{.file_id = 1, .size = 1, .padded_size = 0, .tag = 0, .offset = 0x123, .checksum = 0x4567, .checkpoint_info = {.data_location = location1, .is_valid = true}};
-    CheckpointLocation location2{
-        .data_file_id = std::make_shared<String>("hhhhh"),
-        .offset_in_file = 5000,
-        .size_in_file = 2000,
-    };
-    PageEntryV3 entry_p2{.file_id = 1, .size = 2, .padded_size = 0, .tag = 0, .offset = 0x123, .checksum = 0x4567, .checkpoint_info = {.data_location = location2, .is_valid = true}};
-    PageVersion ver20(/*seq=*/20);
-    {
-        universal::PageEntriesEdit edit;
-        edit.put(UniversalPageId{"1"}, entry_p1);
-        edit.put(UniversalPageId{"2"}, entry_p2);
-        size_each_edit.emplace_back(edit.size());
-        applyWithSameVersion(wal, edit, ver20);
-    }
-
-    // Stage 2. Apply with puts and refs
-    PageEntryV3 entry_p3{.file_id = 1, .size = 3, .padded_size = 0, .tag = 0, .offset = 0x123, .checksum = 0x4567};
-    PageEntryV3 entry_p5{.file_id = 1, .size = 5, .padded_size = 0, .tag = 0, .offset = 0x123, .checksum = 0x4567};
-    PageVersion ver21(/*seq=*/21);
-    {
-        universal::PageEntriesEdit edit;
-        edit.put(UniversalPageId{"3"}, entry_p3);
-        edit.ref(UniversalPageId{"4"}, UniversalPageId{"3"});
-        size_each_edit.emplace_back(edit.size());
-        applyWithSameVersion(wal, edit, ver21);
-    }
-
-    // Stage 1. Write more remote pages
-    CheckpointLocation location6{
-        .data_file_id = std::make_shared<String>("hhhhh"),
-        .offset_in_file = 100,
-        .size_in_file = 2000,
-    };
-    PageEntryV3 entry_p6{.file_id = 1, .size = 1, .padded_size = 0, .tag = 0, .offset = 0x123, .checksum = 0x4567, .checkpoint_info = {.data_location = location6, .is_valid = true}};
-    CheckpointLocation location7{
-        .data_file_id = std::make_shared<String>("hhhhh2"),
-        .offset_in_file = 5000,
-        .size_in_file = 2000,
-    };
-    PageEntryV3 entry_p7{.file_id = 1, .size = 2, .padded_size = 0, .tag = 0, .offset = 0x123, .checksum = 0x4567, .checkpoint_info = {.data_location = location7, .is_valid = true}};
-    PageVersion ver22(/*seq=*/22);
-    {
-        universal::PageEntriesEdit edit;
-        edit.put(UniversalPageId{"100"}, entry_p6);
-        edit.put(UniversalPageId{"102"}, entry_p7);
-        size_each_edit.emplace_back(edit.size());
-        applyWithSameVersion(wal, edit, ver20);
-    }
-
-    wal.reset();
-
-    // Compare the data_file_id by address and not by value to make sure they point to the same address
-    struct Comparator
-    {
-        bool operator()(const std::shared_ptr<const String> & p1, const std::shared_ptr<const String> & p2) const
-        {
-            return p1 < p2;
-        }
-    };
-
-    {
-        size_t num_applied_edit = 0;
-        auto reader = WALStoreReader::create(getCurrentTestName(), provider, delegator);
-        DataFileIdSet data_file_ids;
-        std::set<std::shared_ptr<const String>, Comparator> result_file_ids;
-        while (reader->remained())
-        {
-            const auto record = reader->next();
-            if (!record)
-                break;
-            // Details of each edit is verified in `WALSeriTest`
-            auto edit = universal::Serializer::deserializeFrom(record.value(), &data_file_ids);
-            for (const auto & r : edit.getRecords())
-            {
-                if (r.type == EditRecordType::PUT && r.entry.checkpoint_info.has_value())
-                {
-                    result_file_ids.emplace(r.entry.checkpoint_info.data_location.data_file_id);
-                }
-            }
-            EXPECT_EQ(size_each_edit[num_applied_edit], edit.size()) << fmt::format("edit size not match at idx={}", num_applied_edit);
-            num_applied_edit += 1;
-        }
-        ASSERT_EQ(result_file_ids.size(), 2);
-        ASSERT_EQ(data_file_ids.size(), 2);
-        EXPECT_EQ(num_applied_edit, 3);
-    }
-}
-CATCH
-
-TEST_P(WALStoreTest, ManyEdits)
-try
-{
-    auto ctx = DB::tests::TiFlashTestEnv::getContext();
-    auto enc_key_manager = std::make_shared<MockKeyManager>(/*encryption_enabled_=*/true);
-    auto enc_provider = std::make_shared<FileProvider>(enc_key_manager, true);
-    auto path = getTemporaryPath();
-
-    // Stage 1. empty
-    auto [wal, reader] = WALStore::create(getCurrentTestName(), enc_provider, delegator, config);
-    ASSERT_NE(wal, nullptr);
-
-    std::mt19937 rd;
-    std::uniform_int_distribution<> d_20(0, 20);
-
-    // Stage 2. insert many edits
-    constexpr size_t num_edits_test = 100000;
-    PageIdU64 page_id = 0;
-    std::vector<size_t> size_each_edit;
-    size_each_edit.reserve(num_edits_test);
-    PageVersion ver(/*seq*/ 32);
-    for (size_t i = 0; i < num_edits_test; ++i)
-    {
-        PageEntryV3 entry{.file_id = 2, .size = 1, .padded_size = 0, .tag = 0, .offset = 0x123, .checksum = 0x4567};
-        PageEntriesEdit edit;
-        const size_t num_pages_put = d_20(rd);
-        for (size_t p = 0; p < num_pages_put; ++p)
-        {
-            page_id += 1;
-            entry.size = page_id;
-            edit.put(buildV3Id(TEST_NAMESPACE_ID, page_id), entry);
-        }
-        applyWithSameVersion(wal, edit, ver);
-
-        size_each_edit.emplace_back(num_pages_put);
-        ver.sequence += 1;
-    }
-
-    wal.reset();
-
-    size_t num_edits_read = 0;
-    size_t num_pages_read = 0;
-    std::tie(wal, reader) = WALStore::create(getCurrentTestName(), enc_provider, delegator, config);
-    while (reader->remained())
-    {
-        auto record = reader->next();
-        if (!record)
-        {
-            reader->throwIfError();
-            // else it just run to the end of file.
-            break;
-        }
-        auto edit = u128::Serializer::deserializeFrom(record.value(), nullptr);
-        num_pages_read += edit.size();
-        EXPECT_EQ(size_each_edit[num_edits_read], edit.size()) << fmt::format("at idx={}", num_edits_read);
-        num_edits_read += 1;
-    }
-    EXPECT_EQ(num_edits_read, num_edits_test);
-    EXPECT_EQ(num_pages_read, page_id);
-
-    LOG_INFO(Logger::get("WALStoreTest"), "Done test for {} persist pages in {} edits", num_pages_read, num_edits_test);
-
-    // Test for save snapshot (with encryption)
-
-    LogFilenameSet persisted_log_files = WALStoreReader::listAllFiles(delegator, log);
-    WALStore::FilesSnapshot file_snap{.persisted_log_files = persisted_log_files};
-
-    PageEntriesEdit snap_edit;
-    PageEntryV3 entry{.file_id = 2, .size = 1, .padded_size = 0, .tag = 0, .offset = 0x123, .checksum = 0x4567};
-    std::uniform_int_distribution<> d_10000(0, 10000);
-    // just fill in some random entry
-    for (size_t i = 0; i < 70; ++i)
-    {
-        snap_edit.varEntry(buildV3Id(TEST_NAMESPACE_ID, d_10000(rd)), PageVersion(345, 22), entry, 1);
-    }
-    std::tie(wal, reader) = WALStore::create(getCurrentTestName(), enc_provider, delegator, config);
-    file_snap.num_records = snap_edit.size();
-    bool done = wal->saveSnapshot(std::move(file_snap), u128::Serializer::serializeTo(snap_edit));
-    ASSERT_TRUE(done);
-    wal.reset();
-    reader.reset();
-
-    // After logs compacted, they should be written as one edit.
-    num_edits_read = 0;
-    num_pages_read = 0;
-    std::tie(wal, reader) = WALStore::create(getCurrentTestName(), enc_provider, delegator, config);
-    while (reader->remained())
-    {
-        auto record = reader->next();
-        if (!record)
-        {
-            reader->throwIfError();
-            // else it just run to the end of file.
-            break;
-        }
-        auto edit = u128::Serializer::deserializeFrom(record.value(), nullptr);
-        num_pages_read += edit.size();
-        num_edits_read += 1;
-    }
-    EXPECT_EQ(num_edits_read, 1);
-    EXPECT_EQ(num_pages_read, 70);
 }
 CATCH
 

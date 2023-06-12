@@ -26,7 +26,9 @@ message(STATUS "config common path: ${CONFIG_COMMON}")
 
 add_headers_and_sources(page .)
 add_headers_and_sources(page ./Common)
+add_headers_and_sources(page ./Common/crc64_arch)
 add_headers_and_sources(page ./Common/StringUtils)
+add_headers_and_sources(page ./Common/SyncPoint)
 add_headers_and_sources(page ./Core)
 add_headers_and_sources(page ./Encryption)
 add_headers_and_sources(page ./IO)
@@ -42,22 +44,25 @@ add_headers_and_sources(page ./V3/WAL)
 
 add_library(page_house ${CONFIG_COMMON} ${page_headers} ${page_sources})
 target_include_directories(page_house PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/)
+target_include_directories (page_house PUBLIC ${PageHouse_SOURCE_DIR}/contrib/libpcg-random/include)
+
 target_link_libraries (page_house
     PUBLIC
-    #libsymbolization
     fiu
+    fmt
+    zstd
     cityhash
     magic_enum
+    double-conversion
     ${LZ4_LIBRARY}
+    ${Poco_Util_LIBRARY}
     ${Poco_Data_LIBRARY}
+    ${Poco_Foundation_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
-    page_storage_v3
 )
 
-add_subdirectory(workload)
-add_subdirectory(tools)
+add_headers_and_sources(page ./TestUtils)
 
-if (ENABLE_TESTS)
-    add_subdirectory (V2/tests EXCLUDE_FROM_ALL)
-    add_subdirectory (V3/tests EXCLUDE_FROM_ALL)
-endif ()
+add_subdirectory(./TestUtils EXCLUDE_FROM_ALL)
+add_subdirectory(./V3/tests EXCLUDE_FROM_ALL)
+

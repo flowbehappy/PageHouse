@@ -76,41 +76,45 @@ WriteReadableFilePtr FileProvider::newWriteReadableFile(
 
 void FileProvider::deleteDirectory(const String & dir_path_, bool dir_path_as_encryption_path, bool recursive) const
 {
-    Poco::File dir_file(dir_path_);
-    if (dir_file.exists())
-    {
-        if (dir_path_as_encryption_path)
-        {
-            key_manager->deleteFile(dir_path_, true);
-            dir_file.remove(recursive);
-        }
-        else if (recursive)
-        {
-            std::vector<Poco::File> files;
-            dir_file.list(files);
-            for (auto & file : files)
-            {
-                if (file.isFile())
-                {
-                    key_manager->deleteFile(file.path(), true);
-                }
-                else if (file.isDirectory())
-                {
-                    deleteDirectory(file.path(), false, recursive);
-                }
-                else
-                {
-                    throw DB::TiFlashException("Unknown file type: " + file.path(), Errors::Encryption::Internal);
-                }
-            }
-            dir_file.remove(recursive);
-        }
-        else
-        {
-            // recursive must be false here
-            dir_file.remove(false);
-        }
-    }
+    if (unlikely(dir_path_as_encryption_path))
+        throw Exception("dir_path_as_encryption_path = true is unsupported");
+    Poco::File file(dir_path_);
+    file.remove(true);
+    //    Poco::File dir_file(dir_path_);
+    //    if (dir_file.exists())
+    //    {
+    //        if (dir_path_as_encryption_path)
+    //        {
+    //            key_manager->deleteFile(dir_path_, true);
+    //            dir_file.remove(recursive);
+    //        }
+    //        else if (recursive)
+    //        {
+    //            std::vector<Poco::File> files;
+    //            dir_file.list(files);
+    //            for (auto & file : files)
+    //            {
+    //                if (file.isFile())
+    //                {
+    //                    key_manager->deleteFile(file.path(), true);
+    //                }
+    //                else if (file.isDirectory())
+    //                {
+    //                    deleteDirectory(file.path(), false, recursive);
+    //                }
+    //                else
+    //                {
+    //                    throw DB::TiFlashException("Unknown file type: " + file.path(), Errors::Encryption::Internal);
+    //                }
+    //            }
+    //            dir_file.remove(recursive);
+    //        }
+    //        else
+    //        {
+    //            // recursive must be false here
+    //            dir_file.remove(false);
+    //        }
+    //    }
 }
 
 void FileProvider::deleteRegularFile(const String & file_path_, const EncryptionPath & encryption_path_) const
@@ -127,29 +131,29 @@ void FileProvider::deleteRegularFile(const String & file_path_, const Encryption
         // In the worst case that TiFlash crash between removing the file on disk and removing the encryption key, we may leave
         // the encryption key not deleted. However, this is a rare case and won't cause serious problem.
         data_file.remove(false);
-        key_manager->deleteFile(encryption_path_.full_path, true);
+        //        key_manager->deleteFile(encryption_path_.full_path, true);
     }
 }
 
 void FileProvider::createEncryptionInfo(const EncryptionPath & encryption_path_) const
 {
-    if (encryption_enabled)
-    {
-        key_manager->newFile(encryption_path_.full_path);
-    }
+    //    if (encryption_enabled)
+    //    {
+    //        key_manager->newFile(encryption_path_.full_path);
+    //    }
 }
 
 void FileProvider::deleteEncryptionInfo(const EncryptionPath & encryption_path_, bool throw_on_error) const
 {
-    key_manager->deleteFile(encryption_path_.full_path, throw_on_error);
+    //    key_manager->deleteFile(encryption_path_.full_path, throw_on_error);
 }
 
 void FileProvider::linkEncryptionInfo(const EncryptionPath & src_encryption_path_, const EncryptionPath & link_encryption_name_) const
 {
-    // delete the encryption info for dst_path if any
-    if (isFileEncrypted(link_encryption_name_))
-        key_manager->deleteFile(link_encryption_name_.full_path, true);
-    key_manager->linkFile(src_encryption_path_.full_path, link_encryption_name_.full_path);
+    //    // delete the encryption info for dst_path if any
+    //    if (isFileEncrypted(link_encryption_name_))
+    //        key_manager->deleteFile(link_encryption_name_.full_path, true);
+    //    key_manager->linkFile(src_encryption_path_.full_path, link_encryption_name_.full_path);
 }
 
 bool FileProvider::isFileEncrypted(const EncryptionPath & encryption_path_) const
@@ -162,7 +166,7 @@ bool FileProvider::isFileEncrypted(const EncryptionPath & encryption_path_) cons
 
 bool FileProvider::isEncryptionEnabled() const
 {
-    return encryption_enabled;
+    return false;
 }
 
 void FileProvider::renameFile(
@@ -196,19 +200,19 @@ void FileProvider::renameFile(
         return;
     }
 
-    // delete the encryption info for dst_path if any
-    if (isFileEncrypted(dst_encryption_path_))
-        key_manager->deleteFile(dst_encryption_path_.full_path, true);
-
-    // rename encryption info(if any) before rename the underlying file
-    bool is_file_encrypted = isFileEncrypted(src_encryption_path_);
-    if (is_file_encrypted)
-        key_manager->linkFile(src_encryption_path_.full_path, dst_encryption_path_.full_path);
+    //    // delete the encryption info for dst_path if any
+    //    if (isFileEncrypted(dst_encryption_path_))
+    //        key_manager->deleteFile(dst_encryption_path_.full_path, true);
+    //
+    //    // rename encryption info(if any) before rename the underlying file
+    //    bool is_file_encrypted = isFileEncrypted(src_encryption_path_);
+    //    if (is_file_encrypted)
+    //        key_manager->linkFile(src_encryption_path_.full_path, dst_encryption_path_.full_path);
 
     data_file.renameTo(dst_file_path_);
 
-    if (is_file_encrypted)
-        key_manager->deleteFile(src_encryption_path_.full_path, false);
+    //    if (is_file_encrypted)
+    //        key_manager->deleteFile(src_encryption_path_.full_path, false);
 }
 
 } // namespace DB

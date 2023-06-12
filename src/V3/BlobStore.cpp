@@ -174,64 +174,64 @@ BlobStore<Trait>::handleLargeWrite(typename Trait::WriteBatch & wb, const WriteL
         {
         case WriteBatchWriteType::PUT:
             //        case WriteBatchWriteType::UPDATE_DATA_FROM_REMOTE:
-            //        {
-            //            ChecksumClass digest;
-            //            PageEntryV3 entry;
-            //
-            //            auto [blob_id, offset_in_file] = getPosFromStats(write.size);
-            //
-            //            entry.file_id = blob_id;
-            //            entry.size = write.size;
-            //            entry.tag = write.tag;
-            //            entry.offset = offset_in_file;
-            //            // padding size won't work on big write batch
-            //            entry.padded_size = 0;
-            //
-            //            BufferBase::Buffer data_buf = write.read_buffer->buffer();
-            //
-            //            digest.update(data_buf.begin(), write.size);
-            //            entry.checksum = digest.checksum();
-            //
-            //            UInt64 field_begin, field_end;
-            //
-            //            for (size_t i = 0; i < write.offsets.size(); ++i)
-            //            {
-            //                ChecksumClass field_digest;
-            //                field_begin = write.offsets[i].first;
-            //                field_end = (i == write.offsets.size() - 1) ? write.size : write.offsets[i + 1].first;
-            //
-            //                field_digest.update(data_buf.begin() + field_begin, field_end - field_begin);
-            //                write.offsets[i].second = field_digest.checksum();
-            //            }
-            //
-            //            if (!write.offsets.empty())
-            //            {
-            //                // we can swap from WriteBatch instead of copying
-            //                entry.field_offsets.swap(write.offsets);
-            //            }
-            //
-            //            try
-            //            {
-            //                auto blob_file = getBlobFile(blob_id);
-            //                blob_file->write(data_buf.begin(), offset_in_file, write.size, write_limiter);
-            //            }
-            //            catch (DB::Exception & e)
-            //            {
-            //                removePosFromStats(blob_id, offset_in_file, write.size);
-            //                LOG_ERROR(log, "[blob_id={}] [offset_in_file={}] [size={}] write failed.", blob_id, offset_in_file, write.size);
-            //                throw e;
-            //            }
-            //            if (write.type == WriteBatchWriteType::PUT)
-            //            {
-            //                edit.put(wb.getFullPageId(write.page_id), entry);
-            //            }
-            //            else
-            //            {
-            //                edit.updateRemote(wb.getFullPageId(write.page_id), entry);
-            //            }
-            //
-            //            break;
-            //        }
+            {
+                ChecksumClass digest;
+                PageEntryV3 entry;
+
+                auto [blob_id, offset_in_file] = getPosFromStats(write.size);
+
+                entry.file_id = blob_id;
+                entry.size = write.size;
+                entry.tag = write.tag;
+                entry.offset = offset_in_file;
+                // padding size won't work on big write batch
+                entry.padded_size = 0;
+
+                BufferBase::Buffer data_buf = write.read_buffer->buffer();
+
+                digest.update(data_buf.begin(), write.size);
+                entry.checksum = digest.checksum();
+
+                UInt64 field_begin, field_end;
+
+                for (size_t i = 0; i < write.offsets.size(); ++i)
+                {
+                    ChecksumClass field_digest;
+                    field_begin = write.offsets[i].first;
+                    field_end = (i == write.offsets.size() - 1) ? write.size : write.offsets[i + 1].first;
+
+                    field_digest.update(data_buf.begin() + field_begin, field_end - field_begin);
+                    write.offsets[i].second = field_digest.checksum();
+                }
+
+                if (!write.offsets.empty())
+                {
+                    // we can swap from WriteBatch instead of copying
+                    entry.field_offsets.swap(write.offsets);
+                }
+
+                try
+                {
+                    auto blob_file = getBlobFile(blob_id);
+                    blob_file->write(data_buf.begin(), offset_in_file, write.size, write_limiter);
+                }
+                catch (DB::Exception & e)
+                {
+                    removePosFromStats(blob_id, offset_in_file, write.size);
+                    LOG_ERROR(log, "[blob_id={}] [offset_in_file={}] [size={}] write failed.", blob_id, offset_in_file, write.size);
+                    throw e;
+                }
+                if (write.type == WriteBatchWriteType::PUT)
+                {
+                    edit.put(wb.getFullPageId(write.page_id), entry);
+                }
+                else
+                {
+                    edit.updateRemote(wb.getFullPageId(write.page_id), entry);
+                }
+
+                break;
+            }
             //        case WriteBatchWriteType::PUT_REMOTE:
             //        {
             //            PageEntryV3 entry;

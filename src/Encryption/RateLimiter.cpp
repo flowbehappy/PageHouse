@@ -99,6 +99,107 @@ inline CurrentMetrics::Increment pendingRequestMetrics(LimiterType type)
     }
 }
 
+std::string StorageIORateLimitConfig::toString() const
+{
+    return fmt::format(
+        "max_bytes_per_sec {} max_read_bytes_per_sec {} max_write_bytes_per_sec {} use_max_bytes_per_sec {} "
+        "fg_write_weight {} bg_write_weight {} fg_read_weight {} bg_read_weight {} fg_write_max_bytes_per_sec {} "
+        "bg_write_max_bytes_per_sec {} fg_read_max_bytes_per_sec {} bg_read_max_bytes_per_sec {} emergency_pct {} high_pct {} "
+        "medium_pct {} tune_base {} min_bytes_per_sec {} auto_tune_sec {}",
+        max_bytes_per_sec,
+        max_read_bytes_per_sec,
+        max_write_bytes_per_sec,
+        use_max_bytes_per_sec,
+        fg_write_weight,
+        bg_write_weight,
+        fg_read_weight,
+        bg_read_weight,
+        getFgWriteMaxBytesPerSec(),
+        getBgWriteMaxBytesPerSec(),
+        getFgReadMaxBytesPerSec(),
+        getBgReadMaxBytesPerSec(),
+        emergency_pct,
+        high_pct,
+        medium_pct,
+        tune_base,
+        min_bytes_per_sec,
+        auto_tune_sec);
+}
+
+UInt64 StorageIORateLimitConfig::readWeight() const
+{
+    return fg_read_weight + bg_read_weight;
+}
+
+UInt64 StorageIORateLimitConfig::writeWeight() const
+{
+    return fg_write_weight + bg_write_weight;
+}
+
+UInt64 StorageIORateLimitConfig::totalWeight() const
+{
+    return readWeight() + writeWeight();
+}
+
+UInt64 StorageIORateLimitConfig::getFgWriteMaxBytesPerSec() const
+{
+    if (writeWeight() <= 0 || totalWeight() <= 0)
+    {
+        return 0;
+    }
+    return use_max_bytes_per_sec ? static_cast<UInt64>(1.0 * max_bytes_per_sec / totalWeight() * fg_write_weight)
+                                 : static_cast<UInt64>(1.0 * max_write_bytes_per_sec / writeWeight() * fg_write_weight);
+}
+
+UInt64 StorageIORateLimitConfig::getBgWriteMaxBytesPerSec() const
+{
+    if (writeWeight() <= 0 || totalWeight() <= 0)
+    {
+        return 0;
+    }
+    return use_max_bytes_per_sec ? static_cast<UInt64>(1.0 * max_bytes_per_sec / totalWeight() * bg_write_weight)
+                                 : static_cast<UInt64>(1.0 * max_write_bytes_per_sec / writeWeight() * bg_write_weight);
+}
+
+UInt64 StorageIORateLimitConfig::getFgReadMaxBytesPerSec() const
+{
+    if (readWeight() <= 0 || totalWeight() <= 0)
+    {
+        return 0;
+    }
+    return use_max_bytes_per_sec ? static_cast<UInt64>(1.0 * max_bytes_per_sec / totalWeight() * fg_read_weight)
+                                 : static_cast<UInt64>(1.0 * max_read_bytes_per_sec / readWeight() * fg_read_weight);
+}
+
+UInt64 StorageIORateLimitConfig::getBgReadMaxBytesPerSec() const
+{
+    if (readWeight() <= 0 || totalWeight() <= 0)
+    {
+        return 0;
+    }
+    return use_max_bytes_per_sec ? static_cast<UInt64>(1.0 * max_bytes_per_sec / totalWeight() * bg_read_weight)
+                                 : static_cast<UInt64>(1.0 * max_read_bytes_per_sec / readWeight() * bg_read_weight);
+}
+
+UInt64 StorageIORateLimitConfig::getWriteMaxBytesPerSec() const
+{
+    return getBgWriteMaxBytesPerSec() + getFgWriteMaxBytesPerSec();
+}
+
+UInt64 StorageIORateLimitConfig::getReadMaxBytesPerSec() const
+{
+    return getBgReadMaxBytesPerSec() + getFgReadMaxBytesPerSec();
+}
+
+bool StorageIORateLimitConfig::operator==(const StorageIORateLimitConfig & config) const
+{
+    return config.max_bytes_per_sec == max_bytes_per_sec && config.max_read_bytes_per_sec == max_read_bytes_per_sec
+        && config.max_write_bytes_per_sec == max_write_bytes_per_sec && config.bg_write_weight == bg_write_weight
+        && config.fg_write_weight == fg_write_weight && config.bg_read_weight == bg_read_weight && config.fg_read_weight == fg_read_weight
+        && config.emergency_pct == emergency_pct && config.high_pct == high_pct && config.medium_pct == medium_pct
+        && config.tune_base == tune_base && config.min_bytes_per_sec == min_bytes_per_sec && config.auto_tune_sec == auto_tune_sec;
+}
+
 WriteLimiter::WriteLimiter(Int64 rate_limit_per_sec_, LimiterType type_, UInt64 refill_period_ms_)
     : refill_period_ms{refill_period_ms_}
     , refill_balance_per_period{calculateRefillBalancePerPeriod(rate_limit_per_sec_)}
@@ -402,16 +503,17 @@ IORateLimiter::~IORateLimiter()
     }
 }
 
-void IORateLimiter::init(Poco::Util::AbstractConfiguration & config_)
+void IORateLimiter::init(const StorageIORateLimitConfig & config_)
 {
-    updateConfig(config_);
+    io_config = config_;
     runAutoTune();
 }
 
+// Fixme: is_background_thread is always false currently. Because I don't want to port that part which will set this value.
 #if __APPLE__ && __clang__
-extern __thread bool is_background_thread;
+static __thread bool is_background_thread = false;
 #else
-extern thread_local bool is_background_thread;
+static thread_local bool is_background_thread = false;
 #endif
 
 WriteLimiterPtr IORateLimiter::getWriteLimiter()
@@ -426,17 +528,17 @@ ReadLimiterPtr IORateLimiter::getReadLimiter()
     return is_background_thread ? bg_read_limiter : fg_read_limiter;
 }
 
-void IORateLimiter::updateConfig(Poco::Util::AbstractConfiguration & config_)
-{
-    StorageIORateLimitConfig new_io_config;
-    if (!readConfig(config_, new_io_config))
-    {
-        return;
-    }
-    std::lock_guard lock(mtx);
-    updateReadLimiter(io_config.getBgReadMaxBytesPerSec(), io_config.getFgReadMaxBytesPerSec());
-    updateWriteLimiter(io_config.getBgWriteMaxBytesPerSec(), io_config.getFgWriteMaxBytesPerSec());
-}
+//void IORateLimiter::updateConfig(Poco::Util::AbstractConfiguration & config_)
+//{
+//    StorageIORateLimitConfig new_io_config;
+//    if (!readConfig(config_, new_io_config))
+//    {
+//        return;
+//    }
+//    std::lock_guard lock(mtx);
+//    updateReadLimiter(io_config.getBgReadMaxBytesPerSec(), io_config.getFgReadMaxBytesPerSec());
+//    updateWriteLimiter(io_config.getBgWriteMaxBytesPerSec(), io_config.getFgWriteMaxBytesPerSec());
+//}
 
 //bool IORateLimiter::readConfig(Poco::Util::AbstractConfiguration & config_, StorageIORateLimitConfig & new_io_config)
 //{

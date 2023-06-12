@@ -19,6 +19,7 @@
 #include <Encryption/FileProvider_fwd.h>
 #include <Encryption/KeyManager.h>
 #include <Encryption/RandomAccessFile.h>
+#include <Encryption/RateLimiter.h>
 #include <Encryption/WritableFile.h>
 #include <Encryption/WriteReadableFile.h>
 
@@ -28,18 +29,10 @@ namespace DB
 {
 using String = std::string;
 
-class WriteLimiter;
-using WriteLimiterPtr = std::shared_ptr<WriteLimiter>;
-class ReadLimiter;
-using ReadLimiterPtr = std::shared_ptr<ReadLimiter>;
-
 class FileProvider
 {
 public:
-    FileProvider(KeyManagerPtr key_manager_, bool encryption_enabled_)
-        : key_manager{std::move(key_manager_)}
-        , encryption_enabled{encryption_enabled_}
-    {}
+    FileProvider() = default;
 
     RandomAccessFilePtr newRandomAccessFile(
         const String & file_path_,
@@ -108,8 +101,6 @@ public:
     ~FileProvider() = default;
 
 private:
-    KeyManagerPtr key_manager;
-    bool encryption_enabled;
 };
 
 } // namespace DB

@@ -32,7 +32,7 @@
 #include <V3/WAL/WALReader.h>
 #include <V3/WALStore.h>
 #include <TestUtils/TiFlashTestBasic.h>
-#include logger_useful.h>
+#include <Common/logger_useful.h>
 #include <sys/types.h>
 
 #include <cstring>

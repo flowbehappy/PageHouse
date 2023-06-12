@@ -15,19 +15,18 @@
 
 #include <Common/Exception.h>
 #include <Common/FmtUtils.h>
+#include <Common/logger_useful.h>
 #include <Encryption/FileProvider.h>
 #include <Page.h>
+#include <TestUtils/MockDiskDelegator.h>
+#include <TestUtils/TiFlashStorageTestBasic.h>
+#include <TestUtils/TiFlashTestBasic.h>
+#include <TestUtils/TiFlashTestEnv.h>
 #include <V3/PageDefines.h>
 #include <V3/PageDirectory.h>
 #include <V3/PageEntriesEdit.h>
 #include <V3/PageEntry.h>
 #include <V3/tests/entries_helper.h>
-#include <TestUtils/MockDiskDelegator.h>
-#include <TestUtils/TiFlashStorageTestBasic.h>
-#include <TestUtils/TiFlashTestBasic.h>
-#include <TestUtils/TiFlashTestEnv.h>
-#include logger_useful.h>
-#include types.h>
 #include <fmt/format.h>
 
 #include <iterator>
@@ -55,7 +54,7 @@ public:
     {
         DerefCounter deref_counter;
         PageEntriesV3 removed_entries;
-        bool all_removed = entries.cleanOutdatedEntries(seq, &deref_counter, &removed_entries, nullptr, entries.acquireLock());
+        bool all_removed = entries.cleanOutdatedEntries(seq, &deref_counter, &removed_entries, entries.acquireLock());
         return {all_removed, removed_entries, deref_counter};
     }
 

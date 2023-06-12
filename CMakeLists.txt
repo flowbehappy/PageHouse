@@ -36,6 +36,6 @@ include (cmake/find_gtest.cmake)
 
 include_directories (src)
 
-add_subdirectory (contrib)
-add_subdirectory (libs)
-add_subdirectory (src)
+add_subdirectory(contrib)
+add_subdirectory(libs)
+add_subdirectory(src)

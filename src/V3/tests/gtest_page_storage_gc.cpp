@@ -22,7 +22,6 @@
 #include <V3/WAL/serialize.h>
 #include <V3/tests/gtest_page_storage.h>
 #include <WriteBatchImpl.h>
-#include defines.h>
 #include <gtest/gtest-param-test.h>
 #include <gtest/gtest.h>
 

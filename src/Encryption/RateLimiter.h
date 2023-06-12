@@ -14,9 +14,9 @@
 
 #pragma once
 
+#include <Common/Logger.h>
 #include <Common/Stopwatch.h>
 #include <Common/nocopyable.h>
-//#include <Server/StorageConfigParser.h>
 #include <fmt/core.h>
 
 #include <atomic>
@@ -28,11 +28,6 @@
 #include <queue>
 #include <thread>
 
-// TODO: separate IO utility(i.e. FileProvider, RateLimiter) from Encryption directory
-namespace Poco::Util
-{
-class AbstractConfiguration;
-}
 namespace DB
 {
 class LimiterStat;
@@ -111,8 +106,6 @@ public:
         , auto_tune_sec(5)
     {}
 
-    void parse(const String & storage_io_rate_limit, const LoggerPtr & log);
-
     std::string toString() const;
 
     UInt64 getFgWriteMaxBytesPerSec() const;
@@ -127,6 +120,11 @@ public:
 
     bool operator==(const StorageIORateLimitConfig & config) const;
 };
+
+class WriteLimiter;
+using WriteLimiterPtr = std::shared_ptr<WriteLimiter>;
+class ReadLimiter;
+using ReadLimiterPtr = std::shared_ptr<ReadLimiter>;
 
 // WriteLimiter is to control write rate (bytes per second).
 // Because of the storage engine is append-only, the amount of data written by the storage engine
@@ -222,8 +220,6 @@ protected:
     LoggerPtr log;
 };
 
-using WriteLimiterPtr = std::shared_ptr<WriteLimiter>;
-
 // ReadLimiter is to control read rate (bytes per second).
 // Because of the page cache, the amount of data read by the storage engine
 // is NOT equal to the amount of data read from the disk by the operating system.
@@ -264,8 +260,6 @@ private:
     std::chrono::time_point<std::chrono::system_clock> last_refill_time;
 };
 
-using ReadLimiterPtr = std::shared_ptr<ReadLimiter>;
-
 // IORateLimiter is the wrapper of WriteLimiter and ReadLimiter.
 // Currently, It supports four limiter type: background write, foreground write, background read and foreground read.
 //
@@ -280,8 +274,7 @@ public:
 
     WriteLimiterPtr getWriteLimiter();
     ReadLimiterPtr getReadLimiter();
-    void init(Poco::Util::AbstractConfiguration & config_);
-    void updateConfig(Poco::Util::AbstractConfiguration & config_);
+    void init(const StorageIORateLimitConfig & config_);
 
     void setBackgroundThreadIds(std::vector<pid_t> thread_ids);
 
@@ -298,7 +291,6 @@ private:
     void autoTune();
     void runAutoTune();
     // readConfig return true if need to update limiter.
-    bool readConfig(Poco::Util::AbstractConfiguration & config_, StorageIORateLimitConfig & new_io_config);
     void updateReadLimiter(Int64 bg_bytes, Int64 fg_bytes);
     void updateWriteLimiter(Int64 bg_bytes, Int64 fg_bytes);
 
@@ -322,6 +314,8 @@ private:
     // Noncopyable and nonmovable.
     DISALLOW_COPY_AND_MOVE(IORateLimiter);
 };
+
+using ReadLimiterPtr = std::shared_ptr<ReadLimiter>;
 
 class LimiterStat
 {

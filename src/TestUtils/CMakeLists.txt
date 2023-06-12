@@ -12,19 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_headers_and_sources(page_storage_v3 ./)
-add_headers_and_sources(page_storage_v3 ./spacemap)
+include(${PageHouse_SOURCE_DIR}/cmake/dbms_glob_sources.cmake)
 
+add_headers_and_sources(test_util .)
+list(REMOVE_ITEM test_util_sources "gtests_dbms_main.cpp")
 
-list(APPEND page_storage_v3_sources
-    ${PageHouse_SOURCE_DIR}/dbms/src/Server/StorageConfigParser.cpp
-    ${PageHouse_SOURCE_DIR}/dbms/src/PageUtil.cpp
-    ${PageHouse_SOURCE_DIR}/dbms/src/Encryption/RateLimiter.cpp
-)
+message(STATUS "test_util_headers=${test_util_headers}")
+message(STATUS "test_util_sources=${test_util_sources}")
 
-add_library(page_storage_v3 EXCLUDE_FROM_ALL
-    ${page_storage_v3_headers} ${page_storage_v3_sources}
-    ${io_base_headers} ${io_base_sources}
-)
+add_library(test_util_gtest_main ${test_util_headers} ${test_util_sources} gtests_dbms_main.cpp)
+target_link_libraries(test_util_gtest_main gtest benchmark gtest_main page_house)
 
-target_link_libraries(page_storage_v3 PSCheckpointProto)

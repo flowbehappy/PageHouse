@@ -32,8 +32,7 @@
 #include <TestUtils/TiFlashStorageTestBasic.h>
 #include <TestUtils/TiFlashTestBasic.h>
 #include <TestUtils/TiFlashTestEnv.h>
-#include logger_useful.h>
-#include types.h>
+#include <Common/logger_useful.h>
 #include <fmt/format.h>
 
 #include <future>

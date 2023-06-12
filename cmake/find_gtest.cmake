@@ -14,6 +14,8 @@
 
 option (USE_INTERNAL_GTEST_LIBRARY "Set to FALSE to use system Google Test instead of bundled" ${NOT_UNBUNDLED})
 
+message(STATUS "USE_INTERNAL_GTEST_LIBRARY=${USE_INTERNAL_GTEST_LIBRARY}")
+
 if (NOT EXISTS "${PageHouse_SOURCE_DIR}/contrib/googletest/googletest/CMakeLists.txt")
    if (USE_INTERNAL_GTEST_LIBRARY)
        message (WARNING "submodule contrib/googletest is missing. to fix try run: \n git submodule update --init --recursive")
@@ -26,6 +28,9 @@ if (NOT USE_INTERNAL_GTEST_LIBRARY)
     find_path (GTEST_INCLUDE_DIR NAMES /gtest/gtest.h PATHS ${GTEST_INCLUDE_PATHS})
     find_path (GTEST_ROOT NAMES src/gtest-all.cc PATHS /usr/src/googletest/googletest /usr/src/gtest)
 endif ()
+
+message(STATUS "GTEST_INCLUDE_DIR=${GTEST_INCLUDE_DIR}")
+
 
 if (GTEST_INCLUDE_DIR AND GTEST_ROOT)
     # googletest package have no lib

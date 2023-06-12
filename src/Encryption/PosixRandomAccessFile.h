@@ -16,6 +16,7 @@
 
 #include <Common/CurrentMetrics.h>
 #include <Encryption/RandomAccessFile.h>
+#include <Encryption/RateLimiter.h>
 
 #include <string>
 
@@ -26,9 +27,6 @@ extern const Metric OpenFileForRead;
 
 namespace DB
 {
-class ReadLimiter;
-using ReadLimiterPtr = std::shared_ptr<ReadLimiter>;
-
 class FileSegment;
 using FileSegmentPtr = std::shared_ptr<FileSegment>;
 
