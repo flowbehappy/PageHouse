@@ -22,8 +22,10 @@ Some features which make PageHouse unique among all kinds of K-V engines:
     * 1 page consumes ~1 KiB memory currently.
     * We plan to reduce to 100 bytes in the near future.
 
-# Note that PageHouse is not production ready yet!
-
 # License
 
 PageHouse is under the Apache 2.0 license. See the LICENSE file for details.
+
+# Notes
+
+**PageHouse is not production ready yet! Don't use it on your production environment!**
