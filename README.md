@@ -12,8 +12,8 @@ Some features which make PageHouse unique among all kinds of K-V engines:
 * Support reference. You can store a ref-page of another page. Similar to hard link in a file system.
 * Support external values. You can store your real value data in anywhere, and then put a link in PageHouse. E.g. files on local disk or object storage.
 * Resource efficiency.
-    * Each `read(key)` requires exactly 1 Read IO
-    * Each `write(key, value)` requires 2 Write IOs
+    * Each `read(key)` requires exactly 1 system read. The data could be already in system page cache if you are lucky.
+    * Each `write(key, value)` requires 2 system writes
     * The background tasks are carefully designed and try to avoid the influence of foreground tasks.
 
 # Drawbacks
