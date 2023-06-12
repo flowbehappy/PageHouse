@@ -24,3 +24,6 @@ Some features which make PageHouse unique among all kinds of K-V engines:
 
 # Note that PageHouse is not production ready yet!
 
+# License
+
+PageHouse is under the Apache 2.0 license. See the LICENSE file for details.
