@@ -28,4 +28,4 @@ PageHouse is under the Apache 2.0 license. See the LICENSE file for details.
 
 # Notes
 
-**PageHouse is not production ready yet! Don't use it on your production environment!**
+**PageHouse is not production ready yet! Don't use it in your production environment!**
