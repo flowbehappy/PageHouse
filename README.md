@@ -18,9 +18,9 @@ Some features which make PageHouse unique among all kinds of K-V engines:
 
 # Drawbacks
 
-* PageHouse cache all pageids and page meta (including offset, size, and other information) in memory. It could become a bottleneck if your memory is limited.
-    * 1 page consumes ~1 KiB memory currently.
-    * We plan to reduce to 100 bytes in the near future.
+* PageHouse cache all page ids and page meta (including offset, size, and other information) in memory. It could become a bottleneck if your memory is limited.
+    * 1 page meta consumes ~500 bytes memory currently.
+    * We plan to reduce <100 bytes in the near future.
 
 # License
 
