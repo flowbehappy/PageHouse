@@ -28,5 +28,5 @@ PageHouse is under the Apache 2.0 license. See the LICENSE file for details.
 
 # Notes
 
-**PageHouse is not production ready yet! Don't use it in your production environment!**
-
+* **PageHouse is not production ready yet! Don't use it in your production environment!**
+* PageHouse is used to be part of [TiFlash](https://github.com/pingcap/tiflash)
