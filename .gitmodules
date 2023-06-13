@@ -1,39 +1,36 @@
-[submodule "contrib/poco"]
-	path = contrib/poco
-	url = https://github.com/pingcap/poco.git
-[submodule "contrib/zstd"]
-	path = contrib/zstd
-	url = https://github.com/facebook/zstd.git
-[submodule "contrib/lz4"]
-	path = contrib/lz4
-	url = https://github.com/lz4/lz4.git
-[submodule "contrib/googletest"]
-	path = contrib/googletest
-	url = https://github.com/google/googletest.git
-[submodule "contrib/double-conversion"]
-	path = contrib/double-conversion
-	url = https://github.com/google/double-conversion.git
-[submodule "contrib/jemalloc"]
-	path = contrib/jemalloc
-	url = https://github.com/jemalloc/jemalloc.git
-[submodule "contrib/libunwind"]
-	path = contrib/libunwind
-	url = https://github.com/libunwind/libunwind.git
-[submodule "contrib/fmtlib"]
-	path = contrib/fmtlib
-	url = https://github.com/fmtlib/fmt.git
 [submodule "contrib/benchmark"]
 	path = contrib/benchmark
 	url = https://github.com/google/benchmark.git
-[submodule "contrib/magic_enum"]
-	path = contrib/magic_enum
-	url = https://github.com/Neargye/magic_enum.git
 [submodule "contrib/boost"]
 	path = contrib/boost
 	url = https://github.com/pingcap/boost-extra.git
-[submodule "contrib/protobuf"]
-	path = contrib/protobuf
-	url = https://github.com/protocolbuffers/protobuf.git
+[submodule "contrib/double-conversion"]
+	path = contrib/double-conversion
+	url = https://github.com/google/double-conversion.git
+[submodule "contrib/fmtlib"]
+	path = contrib/fmtlib
+	url = https://github.com/fmtlib/fmt.git
+[submodule "contrib/googletest"]
+	path = contrib/googletest
+	url = https://github.com/google/googletest.git
+[submodule "contrib/jemalloc"]
+	path = contrib/jemalloc
+	url = https://github.com/jemalloc/jemalloc.git
+[submodule "contrib/lz4"]
+	path = contrib/lz4
+	url = https://github.com/lz4/lz4.git
+[submodule "contrib/magic_enum"]
+	path = contrib/magic_enum
+	url = https://github.com/Neargye/magic_enum.git
+[submodule "contrib/poco"]
+	path = contrib/poco
+	url = https://github.com/pingcap/poco.git
 [submodule "contrib/zlib-ng"]
 	path = contrib/zlib-ng
 	url = https://github.com/zlib-ng/zlib-ng.git
+[submodule "contrib/protobuf"]
+	path = contrib/protobuf
+	url = https://github.com/protocolbuffers/protobuf.git
+[submodule "contrib/zstd"]
+	path = contrib/zstd
+	url = https://github.com/facebook/zstd.git
