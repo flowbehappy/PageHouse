@@ -1,0 +1,188 @@
+#!/usr/bin/env bash
+
+# This scripts present a friendly interface to the fiu remote control
+# capabilities. Currently, it supports only the named pipe method (the only
+# one implemented).
+
+# default remote control over named pipes prefix; we use the same one as
+# fiu-run so it's easier to use
+FIFO_PREFIX="${TMPDIR:-/tmp}/fiu-ctrl"
+
+# commands to send, will be filled by options processing; must be in the
+# format supported by the fiu remote control (see fiu-rc.c for more details)
+declare -a CMDS
+
+
+HELP_MSG="
+Usage: fiu-ctrl [options] PID [PID ...]
+
+The following options are supported:
+
+  -c command	Run the given libfiu remote control command before executing
+		the program (see below for reference).
+  -f ctrlpath	Enable remote control over named pipes with the given path as
+		base name, the process id will be appended (defaults to
+		\"$FIFO_PREFIX\", set to \"\" to disable).
+
+Remote control commands are of the form 'command param1=value1,param2=value2'.
+Valid commands are:
+
+ - 'enable name=NAME'
+     Enables the NAME failure point unconditionally.
+ - 'enable_random name=NAME,probability=P'
+     Enables the NAME failure point with a probability of P.
+ - 'disable name=NAME'
+     Disables the NAME failure point.
+
+All of the enable\* can also optionally take 'failnum' and 'failinfo'
+parameters, analogous to the ones taken by the C functions.
+
+The following options existed in the past but are deprecated and WILL BE
+REMOVED in future releases: -e, -p, -u, -i, and -d.
+
+
+Examples:
+
+  fiu-ctrl -c 'enable_random name=posix/io/*,probability=0.25' \\
+           -c 'enable_random name=libc/mm/*,probability=0.05' 12345
+
+Tell the process with pid 12345 to enable the failure point 'posix/io/read'
+with a 25% of probability to fail, and the failure point 'libc/mm/malloc' with
+a 5% of probability to fail.
+
+  fiu-ctrl -c 'disable name=posix/io/read' 12345
+
+Tell the same process to disable the previously enabled failure point.
+
+You can control multiple processes at once by specifiying more than one
+process ID.
+"
+
+
+#
+# Parse the options
+#
+
+if [ $# -lt 1 ]; then
+	echo "$HELP_MSG"
+	exit 1
+fi
+
+function opts_reset() {
+	# variables to store what we know so far; after a new name is found
+	# the old one is added to $CMD
+	DEP_NAME=""
+	DEP_PROB=-1
+	DEP_FAILNUM=1
+	DEP_FAILINFO=0
+}
+
+function add_deprecated_enable() {
+	if [ "$DEP_NAME" == "" ]; then
+		return
+	fi;
+
+	PARAMS="name=$DEP_NAME,failnum=$DEP_FAILNUM,failinfo=$DEP_FAILINFO"
+	if [ "$DEP_PROB" -ge 0 ]; then
+		C="enable_random $PARAMS,probability=0.$DEP_PROB"
+	else
+		C="enable $PARAMS"
+	fi
+
+	CMDS[${#CMDS[*]}]="$C"
+}
+
+function deprecated_warning() {
+	echo "Warning: this option is deprecated and will be removed." >&2
+}
+
+opts_reset;
+while getopts "+c:e:p:u:i:d:f:h" opt; do
+	case $opt in
+	c)
+		CMDS[${#CMDS[*]}]="$OPTARG"
+		;;
+	e)
+		# add the current one, if any
+		deprecated_warning;
+		add_deprecated_enable;
+		opts_reset;
+		DEP_NAME="$OPTARG"
+		;;
+	p)
+		deprecated_warning;
+		DEP_PROB="$OPTARG"
+		;;
+	u)
+		deprecated_warning;
+		DEP_FAILNUM="$OPTARG"
+		;;
+	i)
+		deprecated_warning;
+		DEP_FAILINFO="$OPTARG"
+		;;
+	f)
+		FIFO_PREFIX="$OPTARG"
+		;;
+	d)
+		deprecated_warning;
+		CMDS[${#CMDS[*]}]="disable name=$OPTARG"
+		opts_reset;
+		;;
+	h|*)
+		echo "$HELP_MSG"
+		exit 1
+		;;
+	esac;
+done
+
+# add leftovers
+if [ "$DEP_NAME" != "" ]; then
+	add_deprecated_enable;
+fi
+
+# eat the parameters we already processed
+shift $(( $OPTIND - 1 ))
+
+PIDS=""
+PREFIXES=""
+
+for i in "$@"; do
+	if test -p "$i.out"; then
+		PREFIXES="$PREFIXES $i"
+	elif kill -0 $i > /dev/null 2> /dev/null && \
+			test -p	"$FIFO_PREFIX-$i.out"; then
+		PIDS="$PIDS $i"
+	else
+		echo "Error: unknown pid or named pipe $i, skipping"
+		echo "Note that options must come before the PID"
+	fi
+done
+
+#
+# Send the commands
+#
+
+function send_cmd_fifo() {
+	# $1 = complete fifo prefix
+	# $2+ = command to send
+	# echoes the reply
+	P=$1
+	shift 1
+	echo "$@" > $P.in
+	REPLY=$(cat "$P.out")
+	if [ "$REPLY" == "-1" ]; then
+		echo "$P: Command '$@' returned error ($REPLY)"
+	fi
+	#echo "$P: $@ -> $REPLY"
+}
+
+for c in "${CMDS[@]}"; do
+	for i in $PIDS; do
+		send_cmd_fifo $FIFO_PREFIX-$i "$c"
+	done
+	for i in $PREFIXES; do
+		send_cmd_fifo $i "$c"
+	done
+done
+

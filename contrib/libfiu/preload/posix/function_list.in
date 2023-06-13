@@ -1,0 +1,16 @@
+
+What follows is a list with the POSIX functions and their corresponding
+failure point names, as implemented in the preload library.
+
+It is not set in stone, although it shouldn't change frequently.
+
+
+Manually written
+----------------
+
+open				posix/io/oc/open
+
+
+Automatically generated
+-----------------------
+

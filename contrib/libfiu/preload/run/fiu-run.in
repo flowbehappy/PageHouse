@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+
+# This script aims to make the use of the fiu_run_preload library a little
+# easier by providing a more friendly user interface, and abstracting the
+# environment variables used to communicate with it.
+
+# default remote control over named pipes prefix
+FIFO_PREFIX="${TMPDIR:-/tmp}/fiu-ctrl"
+
+# default library path to look for preloader libraries
+PLIBPATH="@@PLIBPATH@@"
+
+# the enable string to pass to the preload library (via the FIU_ENABLE
+# environment variable)
+ENABLE=""
+
+# additional preloader libraries to use
+PRELOAD_LIBS=""
+
+# use the POSIX preload library?
+USE_POSIX_PRELOAD=0
+
+# don't run, but show the command line instead
+DRY_RUN=0
+
+HELP_MSG="
+Usage: fiu-run [options] program [arguments]
+
+The following options are supported:
+
+  -x		Use POSIX libfiu preload library, allows simulate failures in
+		the POSIX and C standard library functions.
+  -c command	Run the given libfiu remote control command before executing
+		the program (see below for reference).
+  -f ctrlpath	Enable remote control over named pipes with the given path as
+		base name, the process id will be appended (defaults to
+		\"$FIFO_PREFIX\", set to \"\" to disable).
+  -l path	Path where to find the libfiu preload libraries, defaults to
+		$PLIBPATH (which is usually correct).
+
+Remote control commands are of the form 'command param1=value1,param2=value2'.
+Valid commands are:
+
+ - 'enable name=NAME'
+     Enables the NAME failure point unconditionally.
+ - 'enable_random name=NAME,probability=P'
+     Enables the NAME failure point with a probability of P.
+
+All of them can also optionally take 'failnum' and 'failinfo' parameters,
+analogous to the ones taken by the C functions.
+
+The following options existed in the past but are deprecated and WILL BE
+REMOVED in future releases: -e, -p, -u and -i.
+
+
+Example:
+
+  fiu-run -x -c 'enable_random name=posix/io/*,probability=0.25' \\
+             -c 'enable_random name=libc/mm/*,probability=0.05' ls -l
+
+Run \"ls -l\" enabling all failure points that begin with 'posix/io/' with a
+25% of probability to fail, and the failure point libc/mm/malloc with a 5% of
+probability to fail.
+"
+
+
+#
+# Parse the options
+#
+
+if [ $# -lt 1 ]; then
+	echo "$HELP_MSG"
+	exit 1
+fi
+
+function opts_reset() {
+	# variables to store what we know so far; after a new name is found
+	# the old one is added to $ENABLE
+	DEP_NAME=""
+	DEP_PROB=-1
+	DEP_FAILNUM=1
+	DEP_FAILINFO=0
+}
+
+function add_deprecated_enable() {
+	if [ "$NAME" == "" ]; then
+		return
+	fi;
+
+	PARAMS="name=$DEP_NAME,failnum=$DEP_FAILNUM,failinfo=$DEP_FAILINFO"
+	if [ $PROB -ge 0 ]; then
+		C="enable_random $PARAMS,probability=$PROB"
+	else
+		C="enable $PARAMS"
+	fi
+
+	ENABLE="$ENABLE
+		$C"
+}
+
+opts_reset;
+while getopts "+c:f:l:xne:p:u:i:h" opt; do
+	case $opt in
+	c)
+		# Note we use the newline as a command separator.
+		ENABLE="$ENABLE
+			$OPTARG"
+		;;
+	f)
+		FIFO_PREFIX="$OPTARG"
+		;;
+	l)
+		PLIBPATH="$OPTARG"
+		;;
+	x)
+		USE_POSIX_PRELOAD=1
+		;;
+	n)
+		DRY_RUN=1
+		;;
+
+	# Deprecated options
+	e)
+		add_deprecated_enable
+		opts_reset
+		DEP_NAME="$OPTARG"
+		;;
+	p)
+		DEP_PROB="$OPTARG"
+		;;
+	u)
+		DEP_FAILNUM="$OPTARG"
+		;;
+	i)
+		DEP_FAILINFO="$OPTARG"
+		;;
+
+	h|*)
+		echo "$HELP_MSG"
+		exit 1
+		;;
+	esac;
+done
+
+# add leftovers
+add_deprecated_enable
+opts_reset;
+
+# eat the parameters we already processed
+shift $(( $OPTIND - 1 ))
+
+# Allow user to give -l and -x in any order.
+if [ $USE_POSIX_PRELOAD -eq 1 ] ; then
+	PRELOAD_LIBS="$PRELOAD_LIBS $PLIBPATH/fiu_posix_preload.so"
+fi
+
+#
+# Run the application
+#
+
+export FIU_ENABLE="$ENABLE"
+export FIU_CTRL_FIFO="$FIFO_PREFIX"
+export LD_PRELOAD="$PLIBPATH/fiu_run_preload.so $PRELOAD_LIBS"
+
+if [ $DRY_RUN -eq 1 ] ; then
+	echo "FIU_ENABLE=\"$ENABLE\"" \\
+	echo "FIU_CTRL_FIFO=\"$FIFO_PREFIX\"" \\
+	echo "LD_PRELOAD=\"$PLIBPATH/fiu_run_preload.so $PRELOAD_LIBS\"" \\
+	echo "$@"
+else
+	exec "$@"
+fi
+
