@@ -32,15 +32,15 @@ using ConstBytePtr = char const *;
 /// they do not check CPU feature and only compare bytes up to the multiple of vector size.
 /// Use `memoryEqual` as the entrance instead.
 
-#ifdef TIFLASH_ENABLE_AVX_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX_SUPPORT
 bool memoryEqualAVX2x4Loop(ConstBytePtr & p1, ConstBytePtr & p2, size_t & size);
 #endif
 
-#ifdef TIFLASH_ENABLE_AVX512_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX512_SUPPORT
 bool memoryEqualAVX512x4Loop(ConstBytePtr & p1, ConstBytePtr & p2, size_t & size);
 #endif
 
-#ifdef TIFLASH_ENABLE_ASIMD_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_ASIMD_SUPPORT
 __attribute__((pure)) bool memoryEqualASIMD(ConstBytePtr p1, ConstBytePtr p2, size_t size);
 #endif
 
@@ -149,7 +149,7 @@ __attribute__((always_inline, pure)) inline bool memoryEqual(const char * p1, co
     {
         using namespace simd_option;
 
-#ifdef TIFLASH_ENABLE_ASIMD_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_ASIMD_SUPPORT
         // for ASIMD target, it is a little bit different because all the compare function is defined in a
         // separate file other than the main loop itself.
         if (ENABLE_ASIMD && cpu_feature_flags.asimd)
@@ -158,7 +158,7 @@ __attribute__((always_inline, pure)) inline bool memoryEqual(const char * p1, co
         }
 #endif
 
-#ifdef TIFLASH_ENABLE_AVX512_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX512_SUPPORT
         if (ENABLE_AVX512 && cpu_feature_flags.avx512f && cpu_feature_flags.avx512vl)
         {
             if (!_detail::memoryEqualAVX512x4Loop(p1, p2, size))
@@ -168,7 +168,7 @@ __attribute__((always_inline, pure)) inline bool memoryEqual(const char * p1, co
             break;
         }
 #endif
-#ifdef TIFLASH_ENABLE_AVX_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX_SUPPORT
         if (ENABLE_AVX && cpu_feature_flags.avx2)
         {
             if (!_detail::memoryEqualAVX2x4Loop(p1, p2, size))
@@ -194,15 +194,15 @@ namespace _detail
 /// - these functions does not check platform support
 /// - these functions assume `size >= sizeof(vector)`
 
-#ifdef TIFLASH_ENABLE_AVX512_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX512_SUPPORT
 __attribute__((pure)) bool memoryIsByteAVX512(const void * data, size_t size, std::byte target);
 #endif
 
-#ifdef TIFLASH_ENABLE_AVX_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX_SUPPORT
 __attribute__((pure)) bool memoryIsByteAVX2(const void * data, size_t size, std::byte target);
 #endif
 
-#ifdef TIFLASH_ENABLE_ASIMD_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_ASIMD_SUPPORT
 __attribute__((pure)) bool memoryIsByteASIMD(const void * data, size_t size, std::byte target);
 #endif
 
@@ -246,14 +246,14 @@ __attribute__((always_inline, pure)) inline bool memoryIsByte(const void * data,
     if (size == 0)
         return true;
 
-#ifdef TIFLASH_ENABLE_AVX512_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX512_SUPPORT
     if (size >= /* sizeof(_m512i) */ 64 && ENABLE_AVX512 && cpu_feature_flags.avx512vl
         && cpu_feature_flags.avx512bw)
     {
         return _detail::memoryIsByteAVX512(data, size, target);
     }
 #endif
-#ifdef TIFLASH_ENABLE_AVX_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX_SUPPORT
     if (size >= /* sizeof(_m256i) */ 32 && ENABLE_AVX && cpu_feature_flags.avx2)
     {
         return _detail::memoryIsByteAVX2(data, size, target);
@@ -265,7 +265,7 @@ __attribute__((always_inline, pure)) inline bool memoryIsByte(const void * data,
         return _detail::memoryIsByteSSE2(data, size, target);
     }
 #endif
-#if TIFLASH_ENABLE_ASIMD_SUPPORT
+#if PAGEHOUSE_ENABLE_ASIMD_SUPPORT
     if (size > /* sizeof(uint8x16_t) */ 16 && ENABLE_ASIMD && cpu_feature_flags.asimd)
     {
         return _detail::memoryIsByteASIMD(data, size, target);

@@ -25,7 +25,7 @@
 #include <Poco/Path.h>
 //#include <Storages/Transaction/ProxyFFI.h>
 //#include <TiDB/Schema/SchemaNameMapper.h>
-//#include <common/likely.h>
+//#include <Common/likely.h>
 #include <Common/logger_useful.h>
 #include <fmt/core.h>
 

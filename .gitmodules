@@ -34,3 +34,12 @@
 [submodule "contrib/zstd"]
 	path = contrib/zstd
 	url = https://github.com/facebook/zstd.git
+[submodule "contrib/cpu_features"]
+	path = contrib/cpu_features
+	url = https://github.com/google/cpu_features.git
+[submodule "contrib/arm-optimized-routines"]
+	path = contrib/arm-optimized-routines
+	url = https://github.com/ARM-software/optimized-routines.git
+[submodule "contrib/re2"]
+	path = contrib/re2
+	url = https://github.com/google/re2.git

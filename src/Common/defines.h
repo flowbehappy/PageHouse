@@ -136,17 +136,17 @@
 #    define ALWAYS_INLINE_NO_SANITIZE_UNDEFINED ALWAYS_INLINE
 #endif
 
-#define TIFLASH_TEMPLATE(...) template <__VA_ARGS__>
-#define TIFLASH_MACRO_ARGS(...) __VA_ARGS__
+#define PAGEHOUSE_TEMPLATE(...) template <__VA_ARGS__>
+#define PAGEHOUSE_MACRO_ARGS(...) __VA_ARGS__
 
-#define TIFLASH_MACRO_CONCAT_IMPL(X, Y) X ## Y
-/// \name TIFLASH_MACRO_CONCAT
+#define PAGEHOUSE_MACRO_CONCAT_IMPL(X, Y) X ## Y
+/// \name PAGEHOUSE_MACRO_CONCAT
 /// \details Concat two language terms (macro expanded).
 /// If you concern about why do we need two levels of macros,
 /// please check: https://gcc.gnu.org/onlinedocs/cpp/Argument-Prescan.html
 /// TL;DR, concatenation operation in macro will forbid pre-scanning
 /// and hence stop the macro in the operands being expanded.
-#define TIFLASH_MACRO_CONCAT(X, Y) TIFLASH_MACRO_CONCAT_IMPL(X, Y)
+#define PAGEHOUSE_MACRO_CONCAT(X, Y) PAGEHOUSE_MACRO_CONCAT_IMPL(X, Y)
 // clang-format on
 
 /// A template function for suppressing warnings about unused variables or function results.
@@ -155,7 +155,7 @@ constexpr void UNUSED(Args &&... args [[maybe_unused]])
 {
 }
 
-/// \name TIFLASH_NO_OPTIMIZE
+/// \name PAGEHOUSE_NO_OPTIMIZE
 /// \tparam T arbitrary type
 /// \param var universal variable reference
 /// \details stop the compiler from optimizing out a variable; this
@@ -163,7 +163,7 @@ constexpr void UNUSED(Args &&... args [[maybe_unused]])
 /// \example
 /// \code{.cpp}
 /// for (size_t i = 0; i < loop_times; ++i) {
-///     TIFLASH_NO_OPTIMIZE(i);
+///     PAGEHOUSE_NO_OPTIMIZE(i);
 /// } // the loop will not be optimized out
 /// \endcode
 /// the code will yield
@@ -179,7 +179,7 @@ constexpr void UNUSED(Args &&... args [[maybe_unused]])
 ///        ret
 /// \endcode
 template <typename T>
-static ALWAYS_INLINE inline void TIFLASH_NO_OPTIMIZE(T && var)
+static ALWAYS_INLINE inline void PAGEHOUSE_NO_OPTIMIZE(T && var)
 {
     asm volatile(""
                  :
@@ -188,19 +188,19 @@ static ALWAYS_INLINE inline void TIFLASH_NO_OPTIMIZE(T && var)
 }
 
 /*!
- * \def TIFLASH_DUMMY_FUNCTION_DEFINITION
+ * \def PAGEHOUSE_DUMMY_FUNCTION_DEFINITION
  * Clang shows warning when there aren't any objects to apply pragma.
  * To prevent this warning we define this function inside every macros with pragmas.
  */
 #ifdef __clang__
-#define TIFLASH_DUMMY_FUNCTION_DEFINITION [[maybe_unused]] void TIFLASH_MACRO_CONCAT(__dummy_function_definition_, __LINE__)();
+#define PAGEHOUSE_DUMMY_FUNCTION_DEFINITION [[maybe_unused]] void PAGEHOUSE_MACRO_CONCAT(__dummy_function_definition_, __LINE__)();
 #ifndef __APPLE__
 #define tiflash_compiler_builtin_memcpy __builtin_memcpy_inline // __builtin_memcpy_inline gurantees that compiler will not emit call to libc's memcpy
 #else
 #define tiflash_compiler_builtin_memcpy __builtin_memcpy
 #endif
 #else
-#define TIFLASH_DUMMY_FUNCTION_DEFINITION
+#define PAGEHOUSE_DUMMY_FUNCTION_DEFINITION
 #define tiflash_compiler_builtin_memcpy __builtin_memcpy
 #endif
 

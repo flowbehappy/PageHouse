@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include <Common/crc64_fast.h>
-#if defined(TIFLASH_CRC64_HAS_SIMD_SUPPORT) && defined(TIFLASH_ENABLE_AVX_SUPPORT) && TIFLASH_COMPILER_VPCLMULQDQ_SUPPORT
+#if defined(PAGEHOUSE_CRC64_HAS_SIMD_SUPPORT) && defined(PAGEHOUSE_ENABLE_AVX_SUPPORT) && PAGEHOUSE_COMPILER_VPCLMULQDQ_SUPPORT
 #include <Common/crc64.h>
 #include <Common/crc64_arch/crc64_x86.h>
 #include <Common/crc64_table.h>

@@ -16,7 +16,7 @@
 
 #include <Core/Defines.h>
 #include <IO/ReadHelpers.h>
-#include <common/shift10.h>
+#include <Common/shift10.h>
 #include <double-conversion/double-conversion.h>
 
 #include <type_traits>

@@ -16,17 +16,17 @@
 #include <Common/crc64_table.h>
 namespace crc64::_detail
 {
-#if defined(TIFLASH_ENABLE_ASIMD_SUPPORT) || __SSE2__
-#define TIFLASH_CRC64_HAS_SIMD_SUPPORT
+#if defined(PAGEHOUSE_ENABLE_ASIMD_SUPPORT) || __SSE2__
+#define PAGEHOUSE_CRC64_HAS_SIMD_SUPPORT
 // avx2 and avx512 variants
-#if TIFLASH_COMPILER_VPCLMULQDQ_SUPPORT
-#ifdef TIFLASH_ENABLE_AVX512_SUPPORT
+#if PAGEHOUSE_COMPILER_VPCLMULQDQ_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX512_SUPPORT
 extern uint64_t update_vpclmulqdq_avx512(uint64_t state, const void * src, size_t length);
-#endif // TIFLASH_ENABLE_AVX512_SUPPORT
-#ifdef TIFLASH_ENABLE_AVX_SUPPORT
+#endif // PAGEHOUSE_ENABLE_AVX512_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX_SUPPORT
 extern uint64_t update_vpclmulqdq_avx2(uint64_t state, const void * src, size_t length);
-#endif // TIFLASH_ENABLE_AVX_SUPPORT
-#endif // TIFLASH_COMPILER_VPCLMULQDQ_SUPPORT
+#endif // PAGEHOUSE_ENABLE_AVX_SUPPORT
+#endif // PAGEHOUSE_COMPILER_VPCLMULQDQ_SUPPORT
 
 uint64_t update_simd(uint64_t state, const void * src, size_t length);
 

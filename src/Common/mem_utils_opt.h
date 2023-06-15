@@ -18,7 +18,7 @@
 
 #include <string_view>
 
-#ifdef TIFLASH_ENABLE_AVX_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX_SUPPORT
 
 #if defined(__AVX2__)
 
@@ -38,7 +38,7 @@ constexpr bool tiflash_use_avx2_compile_flag = false;
 
 #endif
 
-#ifdef TIFLASH_ENABLE_AVX_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX_SUPPORT
 
 namespace mem_utils
 {
@@ -77,7 +77,7 @@ FLATTEN_INLINE_PURE static inline bool IsStrViewEqual(const std::string_view & l
     if (lhs.size() != rhs.size())
         return false;
 
-#ifdef TIFLASH_ENABLE_AVX_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX_SUPPORT
 #ifdef __AVX2__
     return mem_utils::details::avx2_mem_equal(lhs.data(), rhs.data(), lhs.size());
 #else
@@ -91,7 +91,7 @@ FLATTEN_INLINE_PURE static inline bool IsStrViewEqual(const std::string_view & l
 // same function like `std::string_view.compare(std::string_view)`
 FLATTEN_INLINE_PURE static inline int CompareStrView(const std::string_view & lhs, const std::string_view & rhs)
 {
-#ifdef TIFLASH_ENABLE_AVX_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX_SUPPORT
     const size_t size = std::min(lhs.size(), rhs.size());
 
 #ifdef __AVX2__
@@ -113,7 +113,7 @@ FLATTEN_INLINE_PURE static inline int CompareStrView(const std::string_view & lh
 // same function like `std::string_view::find(std::string_view)`
 FLATTEN_INLINE_PURE static inline size_t StrFind(std::string_view src, std::string_view needle)
 {
-#ifdef TIFLASH_ENABLE_AVX_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX_SUPPORT
 #ifdef __AVX2__
     return mem_utils::details::avx2_strstr(src, needle);
 #else

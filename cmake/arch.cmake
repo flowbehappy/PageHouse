@@ -12,9 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include(${TiFlash_SOURCE_DIR}/cmake/dbms_glob_sources.cmake)
-
-add_headers_and_sources(tiflash_common_stringutils .)
-
-add_library(string_utils ${SPLIT_SHARED} ${tiflash_common_stringutils_headers} ${tiflash_common_stringutils_sources})
-target_include_directories (string_utils PRIVATE ${DBMS_INCLUDE_DIR})
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*|arm64.*|ARM64.*)")
+    set (ARCH_AARCH64 1)
+endif ()
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(amd64.*|AMD64.*|x86_64.*|X86_64.*)")
+    set (ARCH_AMD64 1)
+endif ()
+if (ARCH_AARCH64 OR CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+    set (ARCH_ARM 1)
+endif ()
+if (CMAKE_LIBRARY_ARCHITECTURE MATCHES "i386")
+    set (ARCH_I386 1)
+endif ()
+if ( ( ARCH_ARM AND NOT ARCH_AARCH64 ) OR ARCH_I386)
+    set (ARCH_32 1)
+    message (FATAL_ERROR "32bit platforms are not supported")
+endif ()

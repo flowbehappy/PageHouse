@@ -167,7 +167,7 @@ void serializePutTo(const EditRecord & record, WriteBuffer & buf)
     serializeVersionTo(record.version, buf);
     writeIntBinary(record.being_ref_count, buf);
 
-    //    serializeEntryTo(record.entry, buf, has_checkpoint_info);
+    serializeEntryTo(record.entry, buf, false);
 }
 
 template <typename EditType>

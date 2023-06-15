@@ -16,6 +16,15 @@ add_subdirectory(magic_enum)
 add_subdirectory(libcityhash)
 add_subdirectory(fmtlib-cmake)
 
+set (BUILD_TESTING OFF CACHE BOOL "Disable cpu-features testing" FORCE)
+if (NOT (OS_DARWIN AND ARCH_AARCH64))
+    add_subdirectory(cpu_features)
+endif()
+
+if (ARCH_AARCH64 AND OS_LINUX)
+    add_subdirectory(arm-optimized-routines-cmake)
+endif ()
+
 if (USE_INTERNAL_POCO_LIBRARY)
     set (save_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
     set (save_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})

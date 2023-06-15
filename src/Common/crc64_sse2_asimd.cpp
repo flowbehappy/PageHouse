@@ -15,7 +15,7 @@
 #include <Common/crc64_fast.h>
 #include <Common/crc64_table.h>
 
-#ifdef TIFLASH_CRC64_HAS_SIMD_SUPPORT
+#ifdef PAGEHOUSE_CRC64_HAS_SIMD_SUPPORT
 
 #include <Common/crc64.h>
 #if __SSE2__
@@ -83,4 +83,4 @@ uint64_t update_simd(uint64_t state, const void * src, size_t length)
     return acc.fold8(K_127).barrett(POLY, MU);
 }
 } // namespace crc64::_detail
-#endif // TIFLASH_CRC64_HAS_SIMD_SUPPORT
+#endif // PAGEHOUSE_CRC64_HAS_SIMD_SUPPORT

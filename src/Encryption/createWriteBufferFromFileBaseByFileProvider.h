@@ -133,7 +133,7 @@ public:
         }
     };
 
-#define TIFLASH_WBBFPB_CREATE_SETTER(NAME)                            \
+#define PAGEHOUSE_WBBFPB_CREATE_SETTER(NAME)                            \
     template <class T>                                                \
     WriteBufferByFileProviderBuilder & with_##NAME(T && NAME##_value) \
     {                                                                 \
@@ -141,25 +141,25 @@ public:
         return *this;                                                 \
     }
 
-    TIFLASH_WBBFPB_CREATE_SETTER(flags);
+    PAGEHOUSE_WBBFPB_CREATE_SETTER(flags);
 
-    TIFLASH_WBBFPB_CREATE_SETTER(mode);
+    PAGEHOUSE_WBBFPB_CREATE_SETTER(mode);
 
-    TIFLASH_WBBFPB_CREATE_SETTER(estimated_size);
+    PAGEHOUSE_WBBFPB_CREATE_SETTER(estimated_size);
 
-    TIFLASH_WBBFPB_CREATE_SETTER(aio_threshold);
+    PAGEHOUSE_WBBFPB_CREATE_SETTER(aio_threshold);
 
-    TIFLASH_WBBFPB_CREATE_SETTER(buffer_size);
+    PAGEHOUSE_WBBFPB_CREATE_SETTER(buffer_size);
 
-    TIFLASH_WBBFPB_CREATE_SETTER(alignment);
+    PAGEHOUSE_WBBFPB_CREATE_SETTER(alignment);
 
-    TIFLASH_WBBFPB_CREATE_SETTER(existing_memory);
+    PAGEHOUSE_WBBFPB_CREATE_SETTER(existing_memory);
 
-    TIFLASH_WBBFPB_CREATE_SETTER(checksum_algorithm);
+    PAGEHOUSE_WBBFPB_CREATE_SETTER(checksum_algorithm);
 
-    TIFLASH_WBBFPB_CREATE_SETTER(checksum_frame_size);
+    PAGEHOUSE_WBBFPB_CREATE_SETTER(checksum_frame_size);
 };
 
 
-#undef TIFLASH_WBBFPB_CREATE_SETTER
+#undef PAGEHOUSE_WBBFPB_CREATE_SETTER
 } // namespace DB

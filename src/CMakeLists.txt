@@ -24,6 +24,8 @@ set (CONFIG_COMMON ${CMAKE_CURRENT_BINARY_DIR}/Common/config_common.h)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/Common/config_common.h.in ${CONFIG_COMMON})
 message(STATUS "config common path: ${CONFIG_COMMON}")
 
+add_subdirectory(Common)
+
 add_headers_and_sources(page .)
 add_headers_and_sources(page ./Common)
 add_headers_and_sources(page ./Common/crc64_arch)
@@ -53,6 +55,7 @@ target_link_libraries (page_house
     zstd
     cityhash
     magic_enum
+    cpu_features
     double-conversion
     ${LZ4_LIBRARY}
     ${Poco_Util_LIBRARY}
@@ -61,8 +64,10 @@ target_link_libraries (page_house
     ${Boost_SYSTEM_LIBRARY}
 )
 
-add_headers_and_sources(page ./TestUtils)
+if (ARCH_AARCH64 AND OS_LINUX)
+    target_link_libraries (page_house PUBLIC pagehouse-aarch64-string pagehouse-aarch64-math)
+endif()
 
-add_subdirectory(./TestUtils EXCLUDE_FROM_ALL)
-add_subdirectory(./V3/tests EXCLUDE_FROM_ALL)
+add_subdirectory(TestUtils EXCLUDE_FROM_ALL)
+add_subdirectory(V3/tests EXCLUDE_FROM_ALL)
 

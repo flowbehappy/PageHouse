@@ -18,21 +18,21 @@ namespace simd_option
 {
 #if defined(__x86_64__)
 
-#ifdef TIFLASH_ENABLE_AVX_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX_SUPPORT
 extern bool ENABLE_AVX;
 #endif
 
-#ifdef TIFLASH_ENABLE_AVX512_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_AVX512_SUPPORT
 extern bool ENABLE_AVX512;
 #endif
 
 #elif defined(__aarch64__)
 
-#ifdef TIFLASH_ENABLE_ASIMD_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_ASIMD_SUPPORT
 extern bool ENABLE_ASIMD;
 #endif
 
-#ifdef TIFLASH_ENABLE_SVE_SUPPORT
+#ifdef PAGEHOUSE_ENABLE_SVE_SUPPORT
 extern bool ENABLE_SVE;
 #endif
 #endif
