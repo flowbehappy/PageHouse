@@ -165,21 +165,21 @@ void PageDirectoryFactory<Trait>::applyRecord(
         }
     }
 
-    //    if constexpr (std::is_same_v<Trait, universal::FactoryTrait>)
-    //    {
-    //        // We only need page id under specific prefix after restart.
-    //        // If you want to add other prefix here, make sure the page id allocation space is still enough after adding it.
-    //        if (UniversalPageIdFormat::isType(r.page_id, StorageType::Data)
-    //            || UniversalPageIdFormat::isType(r.page_id, StorageType::Log)
-    //            || UniversalPageIdFormat::isType(r.page_id, StorageType::Meta))
-    //        {
-    //            dir->max_page_id = std::max(dir->max_page_id, Trait::PageIdTrait::getU64ID(r.page_id));
-    //        }
-    //    }
-    //    else
-    //    {
-    //        dir->max_page_id = std::max(dir->max_page_id, Trait::PageIdTrait::getU64ID(r.page_id));
-    //    }
+    if constexpr (std::is_same_v<Trait, universal::FactoryTrait>)
+    {
+        // We only need page id under specific prefix after restart.
+        // If you want to add other prefix here, make sure the page id allocation space is still enough after adding it.
+        //            if (UniversalPageIdFormat::isType(r.page_id, StorageType::Data)
+        //                || UniversalPageIdFormat::isType(r.page_id, StorageType::Log)
+        //                || UniversalPageIdFormat::isType(r.page_id, StorageType::Meta))
+        //            {
+        dir->max_page_id = std::max(dir->max_page_id, Trait::PageIdTrait::getU64ID(r.page_id));
+        //            }
+    }
+    else
+    {
+        dir->max_page_id = std::max(dir->max_page_id, Trait::PageIdTrait::getU64ID(r.page_id));
+    }
 
     const auto & version_list = iter->second;
     const auto & restored_version = r.version;

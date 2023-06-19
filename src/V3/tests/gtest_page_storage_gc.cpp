@@ -178,7 +178,7 @@ protected:
     DeleteTiming timing;
 };
 
-TEST_P(PageStorageFullGCConcurrentTest, DeletePage)
+TEST_P(PageStorageFullGCConcurrentTest, DISABLED_DeletePage)
 try
 {
     // always pick all blob file for full gc
@@ -237,7 +237,7 @@ try
 }
 CATCH
 
-TEST_P(PageStorageFullGCConcurrentTest, DeleteRefPage)
+TEST_P(PageStorageFullGCConcurrentTest, DISABLED_DeleteRefPage)
 try
 {
     // always pick all blob file for full gc

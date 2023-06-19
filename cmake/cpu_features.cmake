@@ -99,7 +99,9 @@ elseif (ARCH_AMD64)
     # `haswell` was released since 2013 with cpu feature avx2, bmi2. It's a practical arch for optimizer
     option (PAGEHOUSE_ENABLE_ARCH_HASWELL_SUPPORT "Use instructions based on architecture `haswell` on x86_64" ON)
 
-    option (NO_AVX_OR_HIGHER "Disable AVX or higher on x86_64 for maximum compatibility with older/embedded hardware." OFF)
+#    option (NO_AVX_OR_HIGHER "Disable AVX or higher on x86_64 for maximum compatibility with older/embedded hardware." OFF)
+    # FIXME: avx compile does not work, I don't know why.
+    option (NO_AVX_OR_HIGHER "Disable AVX or higher on x86_64 for maximum compatibility with older/embedded hardware." ON)
     if (NO_AVX_OR_HIGHER)
         SET(PAGEHOUSE_ENABLE_AVX_SUPPORT OFF)
         SET(PAGEHOUSE_ENABLE_AVX512_SUPPORT OFF)

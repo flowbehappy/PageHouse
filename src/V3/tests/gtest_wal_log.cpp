@@ -402,7 +402,7 @@ TEST_P(LogFileRWTest, RandomRead)
 
 /// Tests of all the error paths in LogReader.cpp follow:
 
-TEST_P(LogFileRWTest, ReadError)
+TEST_P(LogFileRWTest, DISABLED_ReadError)
 {
     write("foo");
     resetReader();

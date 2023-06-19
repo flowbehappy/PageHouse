@@ -8,6 +8,9 @@ include(CheckCXXCompilerFlag)
 include (cmake/arch.cmake)
 include (cmake/utils.cmake)
 
+string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_UC)
+message (STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${TiFlash_SOURCE_DIR}/cmake/Modules/")
 set(CMAKE_MACOSX_RPATH 1)
@@ -76,7 +79,6 @@ endif ()
 
 message(STATUS "UNBUNDLED=${UNBUNDLED}, NOT_UNBUNDLED=${NOT_UNBUNDLED}")
 
-
 include (cmake/add_warning.cmake)
 include (cmake/sources.cmake)
 include (cmake/find_jemalloc.cmake)
@@ -87,10 +89,41 @@ include (cmake/find_protobuf.cmake)
 include (cmake/find_lz4.cmake)
 include (cmake/find_gtest.cmake)
 
-include_directories (src)
+# Enable tests by default when build type is debug
+if (CMAKE_BUILD_TYPE_UC STREQUAL "DEBUG")
+    set (ENABLE_TESTS_DEFAULT ON)
+else ()
+    set (ENABLE_TESTS_DEFAULT OFF)
+endif ()
 
-add_subdirectory(contrib)
+message (STATUS "CMAKE_BUILD_TYPE_UC:${CMAKE_BUILD_TYPE_UC}, ENABLE_TESTS_DEFAULT:${ENABLE_TESTS_DEFAULT}")
+option (ENABLE_TESTS "Enables unit tests" ${ENABLE_TESTS_DEFAULT})
+
+message (STATUS "ENABLE_TESTS:${ENABLE_TESTS}")
+
+
+add_subdirectory (contrib) # Should be done after option ENABLE_TESTS, cause we will disable tests under contrib/
 add_subdirectory(libs)
+
+message (STATUS "ENABLE_TESTS:${ENABLE_TESTS}")
+
+# Enable failpoints injection by default when ENABLE_TESTS is turn ON.
+if (ENABLE_TESTS)
+    enable_testing()
+    set (ENABLE_FAILPOINTS_DEFAULT ON)
+    message (STATUS "Tests are enabled")
+else ()
+    set (ENABLE_FAILPOINTS_DEFAULT OFF)
+    message (STATUS "Tests are disabled")
+endif()
+option (ENABLE_FAILPOINTS "Enables failpoints injection" ${ENABLE_FAILPOINTS_DEFAULT})
+if (ENABLE_FAILPOINTS)
+    message (STATUS "Failpoints are enabled")
+else ()
+    message (STATUS "Failpoints are disabled")
+endif ()
+
+include_directories (src)
 add_subdirectory(src)
 
 

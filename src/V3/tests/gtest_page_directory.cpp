@@ -48,6 +48,11 @@ namespace PS::V3::tests
 {
 using u128::PageEntriesEdit;
 
+TEST(SizeTest, PrintSize)
+{
+    std::cout << "size of EditRecord: " << sizeof(std::) << std::endl;
+}
+
 TEST(ExternalIdsByNamespaceTest, Simple)
 {
     NamespaceID ns_id = 100;
