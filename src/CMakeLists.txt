@@ -68,6 +68,7 @@ if (ARCH_AARCH64 AND OS_LINUX)
     target_link_libraries (page_house PUBLIC pagehouse-aarch64-string pagehouse-aarch64-math)
 endif()
 
-add_subdirectory(TestUtils EXCLUDE_FROM_ALL)
-add_subdirectory(V3/tests EXCLUDE_FROM_ALL)
-
+if (ENABLE_TESTS)
+    add_subdirectory(TestUtils EXCLUDE_FROM_ALL)
+    add_subdirectory(V3/tests EXCLUDE_FROM_ALL)
+endif()

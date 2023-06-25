@@ -97,15 +97,18 @@ else ()
 endif ()
 
 message (STATUS "CMAKE_BUILD_TYPE_UC:${CMAKE_BUILD_TYPE_UC}, ENABLE_TESTS_DEFAULT:${ENABLE_TESTS_DEFAULT}")
+
+option (DISABLE_PAGEHOUSE_TESTS "Disable PageHouses tests. It is for the lib users to disable tests in this libpagehouse" OFF)
 option (ENABLE_TESTS "Enables unit tests" ${ENABLE_TESTS_DEFAULT})
 
-message (STATUS "ENABLE_TESTS:${ENABLE_TESTS}")
+if (DISABLE_PAGEHOUSE_TESTS)
+    set (ENABLE_TESTS OFF)
+endif()
 
+message (STATUS "ENABLE_TESTS:${ENABLE_TESTS}")
 
 add_subdirectory (contrib) # Should be done after option ENABLE_TESTS, cause we will disable tests under contrib/
 add_subdirectory(libs)
-
-message (STATUS "ENABLE_TESTS:${ENABLE_TESTS}")
 
 # Enable failpoints injection by default when ENABLE_TESTS is turn ON.
 if (ENABLE_TESTS)
