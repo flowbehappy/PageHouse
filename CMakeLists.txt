@@ -98,10 +98,10 @@ endif ()
 
 message (STATUS "CMAKE_BUILD_TYPE_UC:${CMAKE_BUILD_TYPE_UC}, ENABLE_TESTS_DEFAULT:${ENABLE_TESTS_DEFAULT}")
 
-option (DISABLE_PAGEHOUSE_TESTS "Disable PageHouses tests. It is for the lib users to disable tests in this libpagehouse" OFF)
+option (PAGEHOUSE_DISABLE_TESTS "Disable PageHouses tests. It is for the lib users to disable tests in this libpagehouse" OFF)
 option (ENABLE_TESTS "Enables unit tests" ${ENABLE_TESTS_DEFAULT})
 
-if (DISABLE_PAGEHOUSE_TESTS)
+if (PAGEHOUSE_DISABLE_TESTS)
     set (ENABLE_TESTS OFF)
 endif()
 

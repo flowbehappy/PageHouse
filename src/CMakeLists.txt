@@ -45,7 +45,8 @@ add_headers_and_sources(page ./V3/CheckpointFile/Proto)
 add_headers_and_sources(page ./V3/WAL)
 
 add_library(pagehouse ${CONFIG_COMMON} ${page_headers} ${page_sources})
-target_include_directories(pagehouse PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/)
+target_include_directories(pagehouse PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(pagehouse PUBLIC ${PageHouse_SOURCE_DIR}/src)
 target_include_directories (pagehouse PUBLIC ${PageHouse_SOURCE_DIR}/contrib/libpcg-random/include)
 
 target_link_libraries (pagehouse
