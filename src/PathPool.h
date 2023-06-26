@@ -39,12 +39,14 @@ class PathPool
 public:
     PathPool() = default;
 
+    PathPool(const Strings & paths, const FileProviderPtr & file_provider_);
+
     // Constructor to be used during initialization
     PathPool(
         const Strings & main_data_paths,
         const Strings & latest_data_paths,
         const Strings & kvstore_paths,
-        FileProviderPtr file_provider_);
+        const FileProviderPtr & file_provider_);
 
     // Constructor to create PathPool for one Storage
     StoragePathPool withTable(const String & database_, const String & table_) const;
