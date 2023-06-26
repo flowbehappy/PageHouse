@@ -58,6 +58,7 @@ target_link_libraries (pagehouse
     magic_enum
     cpu_features
     double-conversion
+    pocoext
     ${LZ4_LIBRARY}
     ${Poco_Util_LIBRARY}
     ${Poco_Data_LIBRARY}
