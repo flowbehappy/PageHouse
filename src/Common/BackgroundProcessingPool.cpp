@@ -84,7 +84,6 @@ void BackgroundProcessingPool::TaskInfo::wake()
 BackgroundProcessingPool::BackgroundProcessingPool(int size_, std::string thread_prefix_)
     : size(size_)
     , thread_prefix(thread_prefix_)
-    , thread_ids_counter(size_)
 {
     LOG_INFO(Logger::get(), "Create BackgroundProcessingPool, prefix={} n_threads={}", thread_prefix, size);
 
@@ -200,7 +199,6 @@ void BackgroundProcessingPool::threadFunction(size_t thread_idx) noexcept
         const auto name = thread_prefix + std::to_string(thread_idx);
         setThreadName(name.data());
         is_background_thread = true;
-        addThreadId(getTid());
     }
 
     // set up the thread local memory tracker
@@ -277,27 +275,6 @@ void BackgroundProcessingPool::threadFunction(size_t thread_idx) noexcept
     }
 
     current_memory_tracker = nullptr;
-}
-
-std::vector<pid_t> BackgroundProcessingPool::getThreadIds()
-{
-    thread_ids_counter.Wait();
-    std::lock_guard lock(thread_ids_mtx);
-    if (thread_ids.size() != size)
-    {
-        LOG_ERROR(Logger::get(), "thread_ids.size is {}, but {} is required", thread_ids.size(), size);
-        throw Exception("Background threads' number not match");
-    }
-    return thread_ids;
-}
-
-void BackgroundProcessingPool::addThreadId(pid_t tid)
-{
-    {
-        std::lock_guard lock(thread_ids_mtx);
-        thread_ids.push_back(tid);
-    }
-    thread_ids_counter.DecrementCount();
 }
 
 } // namespace DB
