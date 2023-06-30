@@ -15,9 +15,12 @@
 #pragma once
 
 #include <IO/BufferBase.h>
+#include <IO/CompressedReadBuffer.h>
 #include <IO/MemoryReadWriteBuffer.h>
+#include <IO/ReadBufferFromString.h>
 #include <IO/WriteHelpers.h>
 #include <PageDefinesBase.h>
+#include <Poco/Buffer.h>
 
 #include <map>
 #include <set>
@@ -74,6 +77,22 @@ private:
 
 public:
     inline bool isValid() const { return is_valid; }
+
+    void getDataWithDecompressed(char * read_buf, size_t uncompressed_data_size)
+    {
+        ReadBufferFromString buf(data);
+        CompressedReadBuffer compressed(buf);
+        compressed.readBig(read_buf, uncompressed_data_size);
+    }
+
+    Poco::Buffer<char> getDataWithDecompressed(size_t uncompressed_data_size)
+    {
+        Poco::Buffer<char> result_buf(uncompressed_data_size);
+        ReadBufferFromString buf(data);
+        CompressedReadBuffer compressed(buf);
+        compressed.readBig(result_buf.begin(), uncompressed_data_size);
+        return result_buf;
+    }
 
     std::string_view getFieldData(size_t index) const
     {

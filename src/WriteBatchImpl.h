@@ -14,7 +14,9 @@
 
 #pragma once
 
+#include <IO/CompressedWriteBuffer.h>
 #include <IO/ReadBufferFromString.h>
+#include <IO/MemoryReadWriteBuffer.h>
 #include <IO/WriteHelpers.h>
 #include <PageDefinesBase.h>
 #include <V3/PageEntryCheckpointInfo.h>
@@ -121,6 +123,18 @@ public:
     {
         auto buffer_ptr = std::make_shared<ReadBufferFromOwnString>(data);
         putPage(page_id, tag, buffer_ptr, data.size(), data_sizes);
+    }
+
+    void putPageAndCompress(PageIdU64 page_id, UInt64 tag, std::string_view data, const CompressionSettings & cmp_setting)
+    {
+        MemoryWriteBuffer write_buf;
+        CompressedWriteBuffer compressed(write_buf, cmp_setting);
+        compressed.write(data.data(), data.size());
+        compressed.next();
+        auto cmp_size = write_buf.count();
+        auto read_buf = write_buf.tryGetReadBuffer();
+
+        putPage(page_id, tag, read_buf, cmp_size);
     }
 
     void putExternal(PageIdU64 page_id, UInt64 tag)

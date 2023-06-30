@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 
 #include <Common/types.h>
 #include <IO/CompressedStream.h>

@@ -27,10 +27,9 @@
   * (~ 700 MB/sec, 15 million strings per second)
   */
 
-#include <Common/Decimal.h>
 #include <Core/Defines.h>
-#include <common/types.h>
-#include <common/unaligned.h>
+#include <Common/types.h>
+#include <Common/unaligned.h>
 
 #include <string>
 #include <type_traits>
@@ -178,11 +177,12 @@ public:
     template <typename T>
     void update(const T & x)
     {
-        if constexpr (DB::IsDecimal<T>)
-        {
-            update(x.value);
-        }
-        else if constexpr (is_boost_number_v<T>)
+//        if constexpr (DB::IsDecimal<T>)
+//        {
+//            update(x.value);
+//        }
+//        else
+            if constexpr (is_boost_number_v<T>)
         {
             auto backend_value = x.backend();
             auto size = backend_value.size() * sizeof(backend_value.limbs()[0]);

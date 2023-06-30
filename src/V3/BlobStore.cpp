@@ -227,7 +227,7 @@ BlobStore<Trait>::handleLargeWrite(typename Trait::WriteBatch & wb, const WriteL
                 }
                 else
                 {
-                    edit.updateRemote(wb.getFullPageId(write.page_id), entry);
+//                    edit.updateRemote(wb.getFullPageId(write.page_id), entry);
                 }
 
                 break;
@@ -432,7 +432,7 @@ BlobStore<Trait>::write(typename Trait::WriteBatch && wb, const WriteLimiterPtr 
                 }
                 else
                 {
-                    edit.updateRemote(wb.getFullPageId(write.page_id), entry);
+//                    edit.updateRemote(wb.getFullPageId(write.page_id), entry);
                 }
                 break;
             }
