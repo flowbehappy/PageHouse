@@ -63,7 +63,7 @@ const String PathPool::write_uni_path_prefix = "write";
 const String PathPool::read_node_cache_path_prefix = "read_cache";
 
 PathPool::PathPool(const Strings & paths, const FileProviderPtr & file_provider_)
-    : PathPool(paths, paths, {}, file_provider_)
+    : PathPool(paths, paths, {}, paths, file_provider_)
 {}
 
 // Constructor to be used during initialization
@@ -72,9 +72,19 @@ PathPool::PathPool(
     const Strings & latest_data_paths_,
     const Strings & kvstore_paths_, //
     const FileProviderPtr & file_provider_)
+    : PathPool(main_data_paths_, latest_data_paths_, kvstore_paths_, {}, file_provider_)
+{}
+
+PathPool::PathPool(
+    const Strings & main_data_paths_,
+    const Strings & latest_data_paths_,
+    const Strings & kvstore_paths_, //
+    const Strings & global_page_paths_,
+    const FileProviderPtr & file_provider_)
     : main_data_paths(main_data_paths_)
     , latest_data_paths(latest_data_paths_)
     , kvstore_paths(kvstore_paths_)
+    , global_page_paths(global_page_paths_)
     , file_provider(file_provider_)
     , log(Logger::get())
 {
@@ -88,11 +98,14 @@ PathPool::PathPool(
             kvstore_paths.emplace_back(std::move(p));
         }
     }
-    for (const auto & s : latest_data_paths)
+    if (global_page_paths.empty())
     {
-        // Get a normalized path without trailing '/'
-        auto p = getNormalizedPath(s + "/page");
-        global_page_paths.emplace_back(std::move(p));
+        for (const auto & s : latest_data_paths)
+        {
+            // Get a normalized path without trailing '/'
+            auto p = getNormalizedPath(s + "/page");
+            global_page_paths.emplace_back(std::move(p));
+        }
     }
 }
 

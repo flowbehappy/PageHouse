@@ -46,10 +46,19 @@ public:
         const Strings & main_data_paths,
         const Strings & latest_data_paths,
         const Strings & kvstore_paths,
+        const Strings & global_page_paths_,
+        const FileProviderPtr & file_provider_);
+
+    PathPool(
+        const Strings & main_data_paths,
+        const Strings & latest_data_paths,
+        const Strings & kvstore_paths,
         const FileProviderPtr & file_provider_);
 
     // Constructor to create PathPool for one Storage
     StoragePathPool withTable(const String & database_, const String & table_) const;
+
+    FileProviderPtr getFileProvider() { return file_provider; }
 
     // Generate a delegator for managing the paths of `RegionPersister`.
     // Those paths are generated from `kvstore_paths`.
