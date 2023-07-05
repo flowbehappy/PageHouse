@@ -23,7 +23,7 @@ namespace DB::PS::V3
 enum WALSerializeVersion : UInt32
 {
     Plain = 1,
-    LZ4 = 2,
+    kLZ4 = 2,
 };
 
 struct Comparator

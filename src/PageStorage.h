@@ -15,7 +15,7 @@
 #pragma once
 
 #include <Common/Logger.h>
-#include <Config.h>
+#include <kConfig.h>
 #include <Core/Types.h>
 #include <Encryption/FileProvider_fwd.h>
 #include <ExternalPageCallbacks.h>

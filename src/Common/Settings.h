@@ -7,7 +7,7 @@ namespace DB
 {
 struct Settings
 {
-    CompressionMethod network_compression_method = CompressionMethod::LZ4;
+    CompressionMethod network_compression_method = CompressionMethod::kLZ4;
     Int64 network_zstd_compression_level = 1;
 
     UInt64 dt_segment_limit_rows = 1000000;

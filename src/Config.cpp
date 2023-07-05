@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <Config.h>
+#include <kConfig.h>
 #include <PageUtil.h>
 
 namespace DB

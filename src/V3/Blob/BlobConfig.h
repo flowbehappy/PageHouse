@@ -16,7 +16,7 @@
 
 //#include <Interpreters/SettingsCommon.h>
 #include <Common/defines.h>
-#include <Config.h>
+#include <kConfig.h>
 #include <V3/PageDefines.h>
 #include <V3/spacemap/SpaceMap.h>
 

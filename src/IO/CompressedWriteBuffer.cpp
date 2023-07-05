@@ -45,14 +45,14 @@ size_t CompressionEncode(
 
     switch (compression_settings.method)
     {
-    case CompressionMethod::LZ4:
-    case CompressionMethod::LZ4HC:
+    case CompressionMethod::kLZ4:
+    case CompressionMethod::kLZ4HC:
     {
         static constexpr size_t header_size = 1 + sizeof(UInt32) + sizeof(UInt32);
         compressed_buffer.resize(header_size + LZ4_COMPRESSBOUND(source.size()));
-        compressed_buffer[0] = static_cast<UInt8>(CompressionMethodByte::LZ4);
+        compressed_buffer[0] = static_cast<UInt8>(CompressionMethodByte::kLZ4);
 
-        if (compression_settings.method == CompressionMethod::LZ4)
+        if (compression_settings.method == CompressionMethod::kLZ4)
             compressed_size = header_size + LZ4_compress_fast(source.data(), &compressed_buffer[header_size], source.size(), LZ4_COMPRESSBOUND(source.size()), compression_settings.level);
         else
             compressed_size = header_size + LZ4_compress_HC(source.data(), &compressed_buffer[header_size], source.size(), LZ4_COMPRESSBOUND(source.size()), compression_settings.level);
@@ -65,13 +65,13 @@ size_t CompressionEncode(
 
         break;
     }
-    case CompressionMethod::ZSTD:
+    case CompressionMethod::kZSTD:
     {
         static constexpr size_t header_size = 1 + sizeof(UInt32) + sizeof(UInt32);
 
         compressed_buffer.resize(header_size + ZSTD_compressBound(source.size()));
 
-        compressed_buffer[0] = static_cast<UInt8>(CompressionMethodByte::ZSTD);
+        compressed_buffer[0] = static_cast<UInt8>(CompressionMethodByte::kZSTD);
 
         size_t res = ZSTD_compress(
             &compressed_buffer[header_size],
@@ -81,7 +81,7 @@ size_t CompressionEncode(
             compression_settings.level);
 
         if (ZSTD_isError(res))
-            throw Exception("Cannot compress block with ZSTD: " + std::string(ZSTD_getErrorName(res)), ErrorCodes::CANNOT_COMPRESS);
+            throw Exception("Cannot compress block with kZSTD: " + std::string(ZSTD_getErrorName(res)), ErrorCodes::CANNOT_COMPRESS);
 
         compressed_size = header_size + res;
 
@@ -93,7 +93,7 @@ size_t CompressionEncode(
 
         break;
     }
-    case CompressionMethod::NONE:
+    case CompressionMethod::kNONE:
     {
         static constexpr size_t header_size = 1 + sizeof(UInt32) + sizeof(UInt32);
 
@@ -103,7 +103,7 @@ size_t CompressionEncode(
 
         compressed_buffer.resize(compressed_size);
 
-        compressed_buffer[0] = static_cast<UInt8>(CompressionMethodByte::NONE);
+        compressed_buffer[0] = static_cast<UInt8>(CompressionMethodByte::kNONE);
 
         unalignedStore<UInt32>(&compressed_buffer[1], compressed_size_32);
         unalignedStore<UInt32>(&compressed_buffer[5], uncompressed_size_32);

@@ -15,7 +15,7 @@
 #include <Common/FailPoint.h>
 #include <Common/SyncPoint/Ctl.h>
 #include <Common/SyncPoint/ScopeGuard.h>
-#include <Config.h>
+#include <kConfig.h>
 #include <Snapshot.h>
 #include <V3/PageEntriesEdit.h>
 #include <V3/WAL/WALConfig.h>

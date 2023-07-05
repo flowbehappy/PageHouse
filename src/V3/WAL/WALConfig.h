@@ -15,7 +15,7 @@
 #pragma once
 
 #include <Common/Exception.h>
-#include <Config.h>
+#include <kConfig.h>
 #include <V3/PageDefines.h>
 #include <WALRecoveryMode.h>
 

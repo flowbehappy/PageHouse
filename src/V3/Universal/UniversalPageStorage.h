@@ -15,7 +15,7 @@
 #pragma once
 
 #include <Common/Stopwatch.h>
-#include <Config.h>
+#include <kConfig.h>
 #include <Encryption/FileProvider_fwd.h>
 #include <ExternalPageCallbacks.h>
 #include <FileUsage.h>

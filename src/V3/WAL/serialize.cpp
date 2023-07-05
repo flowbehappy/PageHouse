@@ -427,7 +427,7 @@ template <typename PageEntriesEdit>
 String Serializer<PageEntriesEdit>::serializeInCompressedFormTo(const PageEntriesEdit & edit)
 {
     WriteBufferFromOwnString buf;
-    UInt32 version = WALSerializeVersion::LZ4;
+    UInt32 version = WALSerializeVersion::kLZ4;
     writeIntBinary(version, buf);
     CompressedWriteBuffer compressed_buf(buf);
     for (const auto & record : edit.getRecords())
@@ -471,7 +471,7 @@ PageEntriesEdit Serializer<PageEntriesEdit>::deserializeFrom(std::string_view re
     case WALSerializeVersion::Plain:
         DB::PS::V3::deserializeFrom(buf, edit, data_file_id_set);
         break;
-    case WALSerializeVersion::LZ4:
+    case WALSerializeVersion::kLZ4:
     {
         CompressedReadBuffer compressed_buf(buf);
         DB::PS::V3::deserializeFrom(compressed_buf, edit, data_file_id_set);

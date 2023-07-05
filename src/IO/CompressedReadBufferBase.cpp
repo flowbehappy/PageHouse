@@ -63,8 +63,8 @@ size_t CompressedReadBufferBase<has_checksum>::readCompressedData(size_t & size_
 
     size_t & size_compressed = size_compressed_without_checksum;
 
-    if (method == static_cast<UInt8>(CompressionMethodByte::LZ4) || method == static_cast<UInt8>(CompressionMethodByte::ZSTD)
-        || method == static_cast<UInt8>(CompressionMethodByte::NONE))
+    if (method == static_cast<UInt8>(CompressionMethodByte::kLZ4) || method == static_cast<UInt8>(CompressionMethodByte::kZSTD)
+        || method == static_cast<UInt8>(CompressionMethodByte::kNONE))
     {
         size_compressed = unalignedLoad<UInt32>(&own_compressed_buffer[1]);
         size_decompressed = unalignedLoad<UInt32>(&own_compressed_buffer[5]);
@@ -107,19 +107,19 @@ void CompressedReadBufferBase<has_checksum>::decompress(char * to, size_t size_d
 {
     UInt8 method = compressed_buffer[0]; /// See CompressedWriteBuffer.h
 
-    if (method == static_cast<UInt8>(CompressionMethodByte::LZ4))
+    if (method == static_cast<UInt8>(CompressionMethodByte::kLZ4))
     {
         if (unlikely(LZ4_decompress_safe(compressed_buffer + COMPRESSED_BLOCK_HEADER_SIZE, to, size_compressed_without_checksum - COMPRESSED_BLOCK_HEADER_SIZE, size_decompressed) < 0))
             throw Exception("Cannot LZ4_decompress_safe", ErrorCodes::CANNOT_DECOMPRESS);
     }
-    else if (method == static_cast<UInt8>(CompressionMethodByte::ZSTD))
+    else if (method == static_cast<UInt8>(CompressionMethodByte::kZSTD))
     {
         size_t res = ZSTD_decompress(to, size_decompressed, compressed_buffer + COMPRESSED_BLOCK_HEADER_SIZE, size_compressed_without_checksum - COMPRESSED_BLOCK_HEADER_SIZE);
 
         if (ZSTD_isError(res))
             throw Exception("Cannot ZSTD_decompress: " + std::string(ZSTD_getErrorName(res)), ErrorCodes::CANNOT_DECOMPRESS);
     }
-    else if (method == static_cast<UInt8>(CompressionMethodByte::NONE))
+    else if (method == static_cast<UInt8>(CompressionMethodByte::kNONE))
     {
         memcpy(to, &compressed_buffer[COMPRESSED_BLOCK_HEADER_SIZE], size_decompressed);
     }

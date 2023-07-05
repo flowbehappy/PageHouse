@@ -24,7 +24,7 @@ CompressionSettings::CompressionSettings(const Settings & settings)
     method = settings.network_compression_method;
     switch (method)
     {
-    case CompressionMethod::ZSTD:
+    case CompressionMethod::kZSTD:
         level = settings.network_zstd_compression_level;
         break;
     default:
@@ -36,11 +36,11 @@ int CompressionSettings::getDefaultLevel(CompressionMethod method)
 {
     switch (method)
     {
-    case CompressionMethod::LZ4:
+    case CompressionMethod::kLZ4:
         return 1;
-    case CompressionMethod::LZ4HC:
+    case CompressionMethod::kLZ4HC:
         return LZ4HC_CLEVEL_DEFAULT;
-    case CompressionMethod::ZSTD:
+    case CompressionMethod::kZSTD:
         return 1;
     default:
         return -1;
