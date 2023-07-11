@@ -6,6 +6,7 @@ cmake_policy(SET CMP0048 NEW)
 include(CheckCXXCompilerFlag)
 
 include (cmake/arch.cmake)
+include (cmake/target.cmake)
 include (cmake/utils.cmake)
 
 string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_UC)
