@@ -15,7 +15,6 @@
 #include <Encryption/WriteBufferFromFileProvider.h>
 #include <Encryption/createWriteBufferFromFileBaseByFileProvider.h>
 #if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(_MSC_VER)
-//#include <IO/WriteBufferAIO.h>
 #endif
 #include <Common/ProfileEvents.h>
 #include <IO/ChecksumBuffer.h>

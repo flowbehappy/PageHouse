@@ -16,7 +16,6 @@
 #include <IO/createReadBufferFromFileBase.h>
 
 #if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(_MSC_VER)
-#include <IO/ReadBufferAIO.h>
 #endif
 #include <Common/ProfileEvents.h>
 
