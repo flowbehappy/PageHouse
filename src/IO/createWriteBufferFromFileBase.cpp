@@ -42,11 +42,11 @@ WriteBufferFromFileBase * createWriteBufferFromFileBase(
     }
     else
     {
-#if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(_MSC_VER)
-        return new WriteBufferAIO(filename_, buffer_size_, flags_, mode, existing_memory_);
-#else
+// #if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(_MSC_VER)
+//         return new WriteBufferAIO(filename_, buffer_size_, flags_, mode, existing_memory_);
+// #else
         throw Exception("AIO is not implemented yet on MacOS X", ErrorCodes::NOT_IMPLEMENTED);
-#endif
+// #endif
     }
 }
 

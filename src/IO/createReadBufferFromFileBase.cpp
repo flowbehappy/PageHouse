@@ -42,11 +42,11 @@ createReadBufferFromFileBase(
     }
     else
     {
-#if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(_MSC_VER)
-        return std::make_unique<ReadBufferAIO>(filename_, buffer_size_, flags_, existing_memory_);
-#else
+// #if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(_MSC_VER)
+//         return std::make_unique<ReadBufferAIO>(filename_, buffer_size_, flags_, existing_memory_);
+// #else
         throw Exception("AIO is not implemented yet on MacOS X", ErrorCodes::NOT_IMPLEMENTED);
-#endif
+// #endif
     }
 }
 
