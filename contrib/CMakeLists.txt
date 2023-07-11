@@ -4,6 +4,8 @@ if (NOT MSVC)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-old-style-cast")
 endif ()
 
+SET (POCO_STATIC ON CACHE BOOL "Build using shared libraries of poco" FORCE)
+
 add_subdirectory(libfiu)
 add_subdirectory(boost-cmake)
 add_subdirectory(lz4-cmake)
