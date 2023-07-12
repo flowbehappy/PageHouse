@@ -127,8 +127,9 @@ public:
 
     void putPageAndCompress(PageIdU64 page_id, UInt64 tag, std::string_view data, const CompressionSettings & cmp_setting)
     {
-        MemoryWriteBuffer write_buf;
-        CompressedWriteBuffer compressed(write_buf, cmp_setting);
+        auto data_size = data.size();
+        MemoryWriteBuffer write_buf(0, data_size);
+        CompressedWriteBuffer<false> compressed(write_buf, cmp_setting);
         compressed.write(data.data(), data.size());
         compressed.next();
         auto cmp_size = write_buf.count();

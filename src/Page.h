@@ -81,7 +81,7 @@ public:
     void getDataWithDecompressed(char * read_buf, size_t uncompressed_data_size)
     {
         ReadBufferFromString buf(data);
-        CompressedReadBuffer compressed(buf);
+        CompressedReadBuffer<false> compressed(buf);
         compressed.readBig(read_buf, uncompressed_data_size);
     }
 
@@ -89,7 +89,7 @@ public:
     {
         Poco::Buffer<char> result_buf(uncompressed_data_size);
         ReadBufferFromString buf(data);
-        CompressedReadBuffer compressed(buf);
+        CompressedReadBuffer<false> compressed(buf);
         compressed.readBig(result_buf.begin(), uncompressed_data_size);
         return result_buf;
     }
